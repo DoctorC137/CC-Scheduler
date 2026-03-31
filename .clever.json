@@ -1,18 +1,10 @@
 {
   "apps": [
     {
-      "app_id": "app_2d2ba78d-0bae-4b9d-aca6-c77c505dba9e",
-      "org_id": "user_bab29898-e71d-4a2e-a290-637ad9b2caf5",
-      "deploy_url": "https://push-n3-par-clevercloud-customers.services.clever-cloud.com/app_2d2ba78d-0bae-4b9d-aca6-c77c505dba9e.git",
-      "git_ssh_url": "git+ssh://git@push-n3-par-clevercloud-customers.services.clever-cloud.com/app_2d2ba78d-0bae-4b9d-aca6-c77c505dba9e.git",
-      "name": "bryanmotta",
-      "alias": "bryanmotta"
-    },
-    {
-      "app_id": "app_dae33cc6-5f9a-4b1e-8a7a-9b21f6884bcc",
+      "app_id": "app_efadf9c5-eb3d-4611-a63b-75538f76cf70",
       "org_id": "orga_99543bee-f814-43f6-a8f8-3dcb2a1bd4fa",
-      "deploy_url": "https://push-n3-par-clevercloud-customers.services.clever-cloud.com/app_dae33cc6-5f9a-4b1e-8a7a-9b21f6884bcc.git",
-      "git_ssh_url": "git+ssh://git@push-n3-par-clevercloud-customers.services.clever-cloud.com/app_dae33cc6-5f9a-4b1e-8a7a-9b21f6884bcc.git",
+      "deploy_url": "https://push-n3-par-clevercloud-customers.services.clever-cloud.com/app_efadf9c5-eb3d-4611-a63b-75538f76cf70.git",
+      "git_ssh_url": "git+ssh://git@push-n3-par-clevercloud-customers.services.clever-cloud.com/app_efadf9c5-eb3d-4611-a63b-75538f76cf70.git",
       "name": "CC-Scheduler",
       "alias": "CC-Scheduler"
     }

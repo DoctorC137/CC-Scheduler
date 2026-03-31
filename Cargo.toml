@@ -43,3 +43,10 @@ tracing-subscriber = { version = "0.3", features = ["env-filter", "fmt"] }
 # Error handling
 anyhow = "1"
 thiserror = "1"
+
+# OAuth1 signing
+hmac = "0.12"
+sha1 = "0.10"
+base64 = "0.22"
+rand = "0.8"
+percent-encoding = "2"

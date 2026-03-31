@@ -1,16 +1,23 @@
 use anyhow::{bail, Result};
+use base64::{engine::general_purpose::STANDARD as B64, Engine};
+use hmac::{Hmac, Mac};
+use rand::Rng;
+use sha1::Sha1;
+use std::time::{SystemTime, UNIX_EPOCH};
 use tracing::debug;
 
 use crate::config::AppConfig;
 
-/// Client pour interagir avec l'API Clever Cloud.
-///
-/// Utilise l'API token (le plus simple pour une app interne à une orga).
-/// Pour un usage multi-utilisateurs, basculer sur OAuth1 via clevercloud-sdk.
+// Clever Cloud / clever-tools public OAuth1 consumer credentials
+const CONSUMER_KEY: &str = "T5nFjKeHH4AIlEveuGhB5S3xg8T19e";
+const CONSUMER_SECRET: &str = "MgVMqTr6fWlf2M0tkC2MXOnhfqBWDT";
+
+type HmacSha1 = Hmac<Sha1>;
+
 pub struct CleverClient {
     http: reqwest::Client,
     token: String,
-    base_url: String,
+    token_secret: String,
 }
 
 impl CleverClient {
@@ -21,93 +28,151 @@ impl CleverClient {
 
         Ok(Self {
             http,
-            token: cfg.cc_api_token.clone(),
-            base_url: "https://api-bridge.clever-cloud.com".to_string(),
+            token: cfg.cc_oauth_token.clone(),
+            token_secret: cfg.cc_oauth_secret.clone(),
         })
     }
 
-    /// Démarre une application (POST /v2/organisations/{org}/applications/{app}/instances)
-    pub async fn start_app(&self, org_id: &str, app_id: &str) -> Result<()> {
-        let url = format!(
-            "{}/v2/organisations/{}/applications/{}/instances",
-            self.base_url, org_id, app_id
-        );
-        debug!(org_id, app_id, "Starting application");
+    /// Construit le header Authorization OAuth1 pour une requête GET
+    fn oauth1_header(&self, method: &str, url: &str) -> String {
+        let timestamp = SystemTime::now()
+            .duration_since(UNIX_EPOCH)
+            .unwrap()
+            .as_secs()
+            .to_string();
 
-        let resp = self.http
-            .post(&url)
-            .bearer_auth(&self.token)
-            .send()
-            .await?;
+        let nonce: String = rand::thread_rng()
+            .sample_iter(&rand::distributions::Alphanumeric)
+            .take(32)
+            .map(char::from)
+            .collect();
 
-        if !resp.status().is_success() {
-            let status = resp.status();
-            let body = resp.text().await.unwrap_or_default();
-            bail!("start_app failed: {} - {}", status, body);
-        }
-        Ok(())
+        let mut params = vec![
+            ("oauth_consumer_key", CONSUMER_KEY.to_string()),
+            ("oauth_nonce", nonce.clone()),
+            ("oauth_signature_method", "HMAC-SHA1".to_string()),
+            ("oauth_timestamp", timestamp.clone()),
+            ("oauth_token", self.token.clone()),
+            ("oauth_version", "1.0".to_string()),
+        ];
+
+        // Tri alphabétique requis par OAuth1
+        params.sort_by(|a, b| a.0.cmp(b.0));
+
+        let param_str = params
+            .iter()
+            .map(|(k, v)| format!("{}={}", pct(k), pct(v)))
+            .collect::<Vec<_>>()
+            .join("&");
+
+        let base = format!("{}&{}&{}", method, pct(url), pct(&param_str));
+        let signing_key = format!("{}&{}", pct(CONSUMER_SECRET), pct(&self.token_secret));
+
+        let mut mac = HmacSha1::new_from_slice(signing_key.as_bytes()).unwrap();
+        mac.update(base.as_bytes());
+        let sig = B64.encode(mac.finalize().into_bytes());
+
+        params.push(("oauth_signature", sig));
+        params.sort_by(|a, b| a.0.cmp(b.0));
+
+        let header_parts = params
+            .iter()
+            .map(|(k, v)| format!("{}=\"{}\"", k, pct(v)))
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        format!("OAuth {}", header_parts)
     }
 
-    /// Stoppe une application (DELETE /v2/organisations/{org}/applications/{app}/instances)
-    pub async fn stop_app(&self, org_id: &str, app_id: &str) -> Result<()> {
-        let url = format!(
-            "{}/v2/organisations/{}/applications/{}/instances",
-            self.base_url, org_id, app_id
-        );
-        debug!(org_id, app_id, "Stopping application");
+    async fn get(&self, url: &str) -> Result<serde_json::Value> {
+        let auth = self.oauth1_header("GET", url);
+        debug!(url, "CC API GET");
 
         let resp = self.http
-            .delete(&url)
-            .bearer_auth(&self.token)
+            .get(url)
+            .header("Authorization", auth)
             .send()
             .await?;
 
         if !resp.status().is_success() {
             let status = resp.status();
             let body = resp.text().await.unwrap_or_default();
-            bail!("stop_app failed: {} - {}", status, body);
-        }
-        Ok(())
-    }
-
-    /// Liste les organisations accessibles via le token
-    pub async fn list_orgs(&self) -> Result<serde_json::Value> {
-        let url = format!("{}/v2/self/organisations", self.base_url);
-
-        let resp = self.http
-            .get(&url)
-            .bearer_auth(&self.token)
-            .send()
-            .await?;
-
-        if !resp.status().is_success() {
-            let status = resp.status();
-            let body = resp.text().await.unwrap_or_default();
-            bail!("list_orgs failed: {} - {}", status, body);
+            bail!("CC API error {}: {}", status, body);
         }
 
         Ok(resp.json().await?)
+    }
+
+    async fn post_empty(&self, url: &str) -> Result<()> {
+        let auth = self.oauth1_header("POST", url);
+
+        let resp = self.http
+            .post(url)
+            .header("Authorization", auth)
+            .send()
+            .await?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            bail!("CC API error {}: {}", status, body);
+        }
+        Ok(())
+    }
+
+    async fn delete_req(&self, url: &str) -> Result<()> {
+        let auth = self.oauth1_header("DELETE", url);
+
+        let resp = self.http
+            .delete(url)
+            .header("Authorization", auth)
+            .send()
+            .await?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            bail!("CC API error {}: {}", status, body);
+        }
+        Ok(())
+    }
+
+    /// Liste les organisations accessibles
+    pub async fn list_orgs(&self) -> Result<serde_json::Value> {
+        self.get("https://api.clever-cloud.com/v2/organisations").await
     }
 
     /// Liste les applications d'une organisation
     pub async fn list_apps(&self, org_id: &str) -> Result<serde_json::Value> {
         let url = format!(
-            "{}/v2/organisations/{}/applications",
-            self.base_url, org_id
+            "https://api.clever-cloud.com/v2/organisations/{}/applications",
+            org_id
         );
-
-        let resp = self.http
-            .get(&url)
-            .bearer_auth(&self.token)
-            .send()
-            .await?;
-
-        if !resp.status().is_success() {
-            let status = resp.status();
-            let body = resp.text().await.unwrap_or_default();
-            bail!("list_apps failed: {} - {}", status, body);
-        }
-
-        Ok(resp.json().await?)
+        self.get(&url).await
     }
+
+    /// Démarre une application
+    pub async fn start_app(&self, org_id: &str, app_id: &str) -> Result<()> {
+        let url = format!(
+            "https://api.clever-cloud.com/v2/organisations/{}/applications/{}/instances",
+            org_id, app_id
+        );
+        debug!(org_id, app_id, "Starting application");
+        self.post_empty(&url).await
+    }
+
+    /// Stoppe une application
+    pub async fn stop_app(&self, org_id: &str, app_id: &str) -> Result<()> {
+        let url = format!(
+            "https://api.clever-cloud.com/v2/organisations/{}/applications/{}/instances",
+            org_id, app_id
+        );
+        debug!(org_id, app_id, "Stopping application");
+        self.delete_req(&url).await
+    }
+}
+
+/// Percent-encode selon RFC 3986 (requis par OAuth1)
+fn pct(s: &str) -> String {
+    percent_encoding::utf8_percent_encode(s, percent_encoding::NON_ALPHANUMERIC).to_string()
 }

@@ -1,0 +1,7 @@
+/Users/bryanmotta/Desktop/Rust visual scheduler/target/debug/deps/http_body-96dd1f5b000954ad.d: /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/lib.rs /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/frame.rs /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/size_hint.rs
+
+/Users/bryanmotta/Desktop/Rust visual scheduler/target/debug/deps/libhttp_body-96dd1f5b000954ad.rmeta: /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/lib.rs /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/frame.rs /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/size_hint.rs
+
+/Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/lib.rs:
+/Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/frame.rs:
+/Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/http-body-1.0.1/src/size_hint.rs:

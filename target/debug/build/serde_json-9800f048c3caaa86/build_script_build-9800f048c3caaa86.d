@@ -1,0 +1,5 @@
+/Users/bryanmotta/Desktop/Rust visual scheduler/target/debug/build/serde_json-9800f048c3caaa86/build_script_build-9800f048c3caaa86.d: /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/build.rs
+
+/Users/bryanmotta/Desktop/Rust visual scheduler/target/debug/build/serde_json-9800f048c3caaa86/build_script_build-9800f048c3caaa86: /Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/build.rs
+
+/Users/bryanmotta/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/serde_json-1.0.149/build.rs:

@@ -2,7 +2,7 @@ use std::sync::Arc;
 use axum::{
     extract::{Path, State},
     http::StatusCode,
-    response::IntoResponse,
+    response::{Html, IntoResponse},
     routing::{delete, get, post, put},
     Json, Router,
 };
@@ -26,6 +26,8 @@ pub fn build_router(scheduler: Arc<SchedulerService>, db: Database) -> Router {
     let state = AppState { scheduler, db };
 
     Router::new()
+        // Frontend
+        .route("/", get(index))
         // Health check
         .route("/health", get(health))
         // Schedules CRUD
@@ -36,15 +38,27 @@ pub fn build_router(scheduler: Arc<SchedulerService>, db: Database) -> Router {
         .route("/schedules/:id", delete(delete_schedule))
         // Actions manuelles
         .route("/schedules/:id/trigger/:action", post(trigger_now))
-        // Liste les apps CC d'une orga (utile pour le UI de sélection)
+        // Clever Cloud API proxy
+        .route("/orgs", get(list_orgs))
         .route("/orgs/:org_id/apps", get(list_cc_apps))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(state)
 }
 
+async fn index() -> impl IntoResponse {
+    Html(include_str!("frontend.html"))
+}
+
 async fn health() -> impl IntoResponse {
     Json(serde_json::json!({ "status": "ok" }))
+}
+
+async fn list_orgs(
+    State(state): State<AppState>,
+) -> Result<impl IntoResponse, AppError> {
+    let orgs = state.scheduler.cc.list_orgs().await?;
+    Ok(Json(orgs))
 }
 
 async fn list_schedules(

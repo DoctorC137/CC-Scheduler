@@ -70,6 +70,25 @@ impl CleverClient {
         Ok(())
     }
 
+    /// Liste les organisations accessibles via le token
+    pub async fn list_orgs(&self) -> Result<serde_json::Value> {
+        let url = format!("{}/v2/self/organisations", self.base_url);
+
+        let resp = self.http
+            .get(&url)
+            .bearer_auth(&self.token)
+            .send()
+            .await?;
+
+        if !resp.status().is_success() {
+            let status = resp.status();
+            let body = resp.text().await.unwrap_or_default();
+            bail!("list_orgs failed: {} - {}", status, body);
+        }
+
+        Ok(resp.json().await?)
+    }
+
     /// Liste les applications d'une organisation
     pub async fn list_apps(&self, org_id: &str) -> Result<serde_json::Value> {
         let url = format!(

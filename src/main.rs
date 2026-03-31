@@ -1,4 +1,5 @@
 mod api;
+mod auth;
 mod config;
 mod db;
 mod error;
@@ -19,26 +20,25 @@ use crate::{
 
 #[tokio::main]
 async fn main() -> Result<()> {
-    // Init logging (CC_LOG_LEVEL ou RUST_LOG)
     fmt()
         .with_env_filter(EnvFilter::from_default_env())
         .init();
 
     info!("Starting cc-scheduler");
 
-    // Config depuis env vars (Clever Cloud les injecte automatiquement)
     let cfg = AppConfig::from_env()?;
 
-    // Connexion DB (POSTGRESQL_ADDON_URI injectée par l'add-on CC)
     let db = Database::connect(&cfg.database_url).await?;
     db.migrate().await?;
 
-    // Service scheduler
-    let scheduler = Arc::new(SchedulerService::new(db.clone(), cfg.clone()).await?);
+    let scheduler = Arc::new(SchedulerService::new(db.clone()).await?);
     scheduler.load_and_schedule_all().await?;
 
-    // Lancement du serveur HTTP
-    let app = api::build_router(scheduler.clone(), db.clone());
+    let http = reqwest::Client::builder()
+        .timeout(std::time::Duration::from_secs(30))
+        .build()?;
+
+    let app = api::build_router(scheduler, db, http, cfg.base_url.clone());
 
     let addr = format!("0.0.0.0:{}", cfg.port);
     info!("Listening on {}", addr);

@@ -1,12 +1,10 @@
-use std::sync::Arc;
 use anyhow::Result;
-use tokio_cron_scheduler::{JobScheduler, Job};
-use tracing::{info, error, warn};
+use tokio_cron_scheduler::{Job, JobScheduler};
+use tracing::{error, info, warn};
 use uuid::Uuid;
 
 use crate::{
     clever::CleverClient,
-    config::AppConfig,
     db::Database,
     models::Schedule,
 };
@@ -14,59 +12,49 @@ use crate::{
 pub struct SchedulerService {
     pub sched: JobScheduler,
     pub db: Database,
-    pub cc: Arc<CleverClient>,
 }
 
 impl SchedulerService {
-    pub async fn new(db: Database, cfg: AppConfig) -> Result<Self> {
+    pub async fn new(db: Database) -> Result<Self> {
         let sched = JobScheduler::new().await?;
         sched.start().await?;
-
-        let cc = Arc::new(CleverClient::new(&cfg)?);
-
-        Ok(Self { sched, db, cc })
+        Ok(Self { sched, db })
     }
 
-    /// Charge tous les schedules actifs depuis la DB et les programme.
     pub async fn load_and_schedule_all(&self) -> Result<()> {
         let schedules = self.db.list_enabled_schedules().await?;
         info!("Loading {} active schedules", schedules.len());
-
         for s in schedules {
-            self.register(&s).await?;
+            if let Err(e) = self.register(&s).await {
+                warn!(schedule_id = %s.id, "Failed to register schedule: {}", e);
+            }
         }
         Ok(())
     }
 
-    /// Enregistre un schedule dans le cron scheduler (stop + start).
     pub async fn register(&self, s: &Schedule) -> Result<()> {
+        if s.user_id.is_none() {
+            warn!(schedule_id = %s.id, "Schedule sans user_id, ignoré");
+            return Ok(());
+        }
         if let Some(ref cron) = s.cron_stop {
-            self.add_job(s.id, &s.org_id, &s.app_id, cron, "stop").await?;
+            self.add_job(s, cron, "stop").await?;
         }
         if let Some(ref cron) = s.cron_start {
-            self.add_job(s.id, &s.org_id, &s.app_id, cron, "start").await?;
+            self.add_job(s, cron, "start").await?;
         }
         Ok(())
     }
 
-    async fn add_job(
-        &self,
-        schedule_id: Uuid,
-        org_id: &str,
-        app_id: &str,
-        cron: &str,
-        action: &str,
-    ) -> Result<()> {
-        let cc = self.cc.clone();
+    async fn add_job(&self, s: &Schedule, cron: &str, action: &str) -> Result<()> {
         let db = self.db.clone();
-        let org = org_id.to_string();
-        let app = app_id.to_string();
+        let user_id = s.user_id.unwrap();
+        let org = s.org_id.clone();
+        let app = s.app_id.clone();
         let act = action.to_string();
-        let sid = schedule_id;
+        let sid = s.id;
 
-        // tokio-cron-scheduler supporte le format standard 5 champs + secondes optionnelles
         let job = Job::new_async(cron, move |_uuid, _lock| {
-            let cc = cc.clone();
             let db = db.clone();
             let org = org.clone();
             let app = app.clone();
@@ -75,11 +63,22 @@ impl SchedulerService {
             Box::pin(async move {
                 info!(schedule_id = %sid, action = %act, app_id = %app, "Executing scheduled action");
 
+                // Récupère le token de l'utilisateur propriétaire du schedule
+                let user = match db.get_user(user_id).await {
+                    Ok(u) => u,
+                    Err(e) => {
+                        error!(schedule_id = %sid, "Failed to get user token: {}", e);
+                        let _ = db.record_execution(sid, &act, Some(&e.to_string())).await;
+                        return;
+                    }
+                };
+
+                let cc = CleverClient::new(user.access_token, user.access_secret);
                 let result = match act.as_str() {
                     "stop" => cc.stop_app(&org, &app).await,
                     "start" => cc.start_app(&org, &app).await,
                     _ => {
-                        error!("Unknown action: {}", act);
+                        error!(schedule_id = %sid, "Unknown action: {}", act);
                         return;
                     }
                 };
@@ -98,16 +97,13 @@ impl SchedulerService {
         })?;
 
         self.sched.add(job).await?;
-        info!(schedule_id = %schedule_id, cron = %cron, action = %action, "Job registered");
+        info!(schedule_id = %sid, cron = %cron, action = %action, "Job registered");
         Ok(())
     }
 
-    /// Supprime tous les jobs associés à un schedule puis les re-programme.
-    /// Stratégie simple: restart complet du scheduler avec rechargement DB.
-    pub async fn reload_schedule(&self, schedule_id: Uuid) -> Result<()> {
-        warn!(schedule_id = %schedule_id, "Reload not yet fine-grained: triggering full reload");
-        // TODO: implémenter la suppression fine par UUID de job
-        // Pour l'instant on reload tout (acceptable pour des dizaines de schedules)
+    pub async fn reload_schedule(&self, _schedule_id: Uuid) -> Result<()> {
+        // TODO: suppression fine par job UUID
+        // Pour l'instant, rechargement complet acceptable pour des dizaines de schedules
         self.load_and_schedule_all().await
     }
 }

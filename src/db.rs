@@ -35,18 +35,23 @@ impl Database {
                 last_run_at TIMESTAMPTZ,
                 last_action TEXT,
                 last_error  TEXT
-            );
+            )
+        "#)
+        .execute(&self.pool)
+        .await?;
 
+        sqlx::query(r#"
             CREATE TABLE IF NOT EXISTS execution_logs (
                 id          BIGSERIAL PRIMARY KEY,
                 schedule_id UUID NOT NULL REFERENCES schedules(id) ON DELETE CASCADE,
                 action      TEXT NOT NULL,
                 executed_at TIMESTAMPTZ NOT NULL DEFAULT now(),
                 error       TEXT
-            );
+            )
         "#)
         .execute(&self.pool)
         .await?;
+
         Ok(())
     }
 

@@ -173,6 +173,17 @@ impl CleverClient {
 }
 
 /// Percent-encode selon RFC 3986 (requis par OAuth1)
+/// Les caractères non-réservés (A-Z a-z 0-9 - _ . ~) ne doivent PAS être encodés.
 fn pct(s: &str) -> String {
-    percent_encoding::utf8_percent_encode(s, percent_encoding::NON_ALPHANUMERIC).to_string()
+    // NON_ALPHANUMERIC encode tout sauf les alphanumériques.
+    // On retire les 4 caractères non-réservés restants : - _ . ~
+    static OAUTH1_SET: std::sync::OnceLock<percent_encoding::AsciiSet> = std::sync::OnceLock::new();
+    let set = OAUTH1_SET.get_or_init(|| {
+        percent_encoding::NON_ALPHANUMERIC
+            .remove(b'-')
+            .remove(b'_')
+            .remove(b'.')
+            .remove(b'~')
+    });
+    percent_encoding::utf8_percent_encode(s, set).to_string()
 }

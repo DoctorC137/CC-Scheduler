@@ -2,32 +2,9 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-/// Utilisateur authentifié via Clever Cloud OAuth1
-#[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
-pub struct User {
-    pub id: Uuid,
-    pub cc_user_id: String,
-    pub cc_email: Option<String>,
-    pub access_token: String,
-    pub access_secret: String,
-    pub created_at: DateTime<Utc>,
-    pub updated_at: DateTime<Utc>,
-}
-
-/// Session HTTP (liée à un User)
-#[derive(Debug, Clone, sqlx::FromRow)]
-pub struct Session {
-    pub id: Uuid,
-    pub user_id: Uuid,
-    pub created_at: DateTime<Utc>,
-    pub expires_at: DateTime<Utc>,
-}
-
-/// Schedule d'extinction/allumage pour une application Clever Cloud
 #[derive(Debug, Clone, Serialize, Deserialize, sqlx::FromRow)]
 pub struct Schedule {
     pub id: Uuid,
-    pub user_id: Option<Uuid>,
     pub org_id: String,
     pub app_id: String,
     pub name: Option<String>,

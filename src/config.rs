@@ -2,17 +2,17 @@ use anyhow::Result;
 
 #[derive(Clone, Debug)]
 pub struct AppConfig {
-    /// Port HTTP (Clever Cloud injecte PORT=8080)
     pub port: u16,
-
-    /// URL PostgreSQL
     pub database_url: String,
 
-    /// Secret pour signer les cookies de session (générer avec: openssl rand -hex 32)
-    pub session_secret: String,
+    /// ID de l'organisation CC gérée par cette instance
+    pub cc_org_id: String,
 
-    /// URL publique de l'app (ex: https://app-xxx.cleverapps.io) — utilisée pour le callback OAuth1
-    pub base_url: String,
+    /// Service token Biscuit (Bearer) pour l'API CC
+    pub cc_service_token: String,
+
+    /// Mot de passe pour accéder à l'interface web
+    pub app_password: String,
 }
 
 impl AppConfig {
@@ -26,10 +26,12 @@ impl AppConfig {
             database_url: std::env::var("POSTGRESQL_ADDON_URI")
                 .or_else(|_| std::env::var("DATABASE_URL"))
                 .expect("POSTGRESQL_ADDON_URI or DATABASE_URL must be set"),
-            session_secret: std::env::var("SESSION_SECRET")
-                .expect("SESSION_SECRET must be set (generate with: openssl rand -hex 32)"),
-            base_url: std::env::var("BASE_URL")
-                .unwrap_or_else(|_| "http://localhost:8080".into()),
+            cc_org_id: std::env::var("CC_ORG_ID")
+                .expect("CC_ORG_ID must be set"),
+            cc_service_token: std::env::var("CC_SERVICE_TOKEN")
+                .expect("CC_SERVICE_TOKEN must be set"),
+            app_password: std::env::var("APP_PASSWORD")
+                .expect("APP_PASSWORD must be set"),
         })
     }
 }

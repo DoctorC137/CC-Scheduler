@@ -13,6 +13,9 @@ use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
 
 use crate::{
+    api::AppState,
+    auth::session_cookie_value,
+    clever::CleverClient,
     config::AppConfig,
     db::Database,
     scheduler::SchedulerService,
@@ -31,15 +34,37 @@ async fn main() -> Result<()> {
     let db = Database::connect(&cfg.database_url).await?;
     db.migrate().await?;
 
-    let scheduler = Arc::new(SchedulerService::new(db.clone()).await?);
+    let cc = Arc::new(CleverClient::new(&cfg.cc_org_id, &cfg.cc_service_token));
+
+    // Récupère le nom de l'organisation au démarrage
+    let org_name = match cc.get_org().await {
+        Ok(org) => org["name"]
+            .as_str()
+            .unwrap_or(&cfg.cc_org_id)
+            .to_string(),
+        Err(e) => {
+            tracing::warn!("Could not fetch org name: {} — using org_id as fallback", e);
+            cfg.cc_org_id.clone()
+        }
+    };
+    info!("Managing organisation: {} ({})", org_name, cfg.cc_org_id);
+
+    let scheduler = Arc::new(SchedulerService::new(db.clone(), cc.clone()).await?);
     scheduler.load_and_schedule_all().await?;
 
-    let http = reqwest::Client::builder()
-        .timeout(std::time::Duration::from_secs(30))
-        .build()?;
+    let session_value = session_cookie_value(&cfg.app_password);
 
-    let app = api::build_router(scheduler, db, http, cfg.base_url.clone());
+    let state = AppState {
+        scheduler,
+        db,
+        cc,
+        org_id: cfg.cc_org_id.clone(),
+        org_name,
+        session_value,
+        app_password: cfg.app_password.clone(),
+    };
 
+    let app = api::build_router(state);
     let addr = format!("0.0.0.0:{}", cfg.port);
     info!("Listening on {}", addr);
 

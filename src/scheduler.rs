@@ -1,4 +1,5 @@
 use anyhow::Result;
+use std::sync::Arc;
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing::{error, info, warn};
 use uuid::Uuid;
@@ -12,13 +13,14 @@ use crate::{
 pub struct SchedulerService {
     pub sched: JobScheduler,
     pub db: Database,
+    pub cc: Arc<CleverClient>,
 }
 
 impl SchedulerService {
-    pub async fn new(db: Database) -> Result<Self> {
+    pub async fn new(db: Database, cc: Arc<CleverClient>) -> Result<Self> {
         let sched = JobScheduler::new().await?;
         sched.start().await?;
-        Ok(Self { sched, db })
+        Ok(Self { sched, db, cc })
     }
 
     pub async fn load_and_schedule_all(&self) -> Result<()> {
@@ -33,10 +35,6 @@ impl SchedulerService {
     }
 
     pub async fn register(&self, s: &Schedule) -> Result<()> {
-        if s.user_id.is_none() {
-            warn!(schedule_id = %s.id, "Schedule sans user_id, ignoré");
-            return Ok(());
-        }
         if let Some(ref cron) = s.cron_stop {
             self.add_job(s, cron, "stop").await?;
         }
@@ -47,36 +45,24 @@ impl SchedulerService {
     }
 
     async fn add_job(&self, s: &Schedule, cron: &str, action: &str) -> Result<()> {
+        let cc = self.cc.clone();
         let db = self.db.clone();
-        let user_id = s.user_id.unwrap();
-        let org = s.org_id.clone();
         let app = s.app_id.clone();
         let act = action.to_string();
         let sid = s.id;
 
         let job = Job::new_async(cron, move |_uuid, _lock| {
+            let cc = cc.clone();
             let db = db.clone();
-            let org = org.clone();
             let app = app.clone();
             let act = act.clone();
 
             Box::pin(async move {
                 info!(schedule_id = %sid, action = %act, app_id = %app, "Executing scheduled action");
 
-                // Récupère le token de l'utilisateur propriétaire du schedule
-                let user = match db.get_user(user_id).await {
-                    Ok(u) => u,
-                    Err(e) => {
-                        error!(schedule_id = %sid, "Failed to get user token: {}", e);
-                        let _ = db.record_execution(sid, &act, Some(&e.to_string())).await;
-                        return;
-                    }
-                };
-
-                let cc = CleverClient::new(user.access_token, user.access_secret);
                 let result = match act.as_str() {
-                    "stop" => cc.stop_app(&org, &app).await,
-                    "start" => cc.start_app(&org, &app).await,
+                    "stop" => cc.stop_app(&app).await,
+                    "start" => cc.start_app(&app).await,
                     _ => {
                         error!(schedule_id = %sid, "Unknown action: {}", act);
                         return;
@@ -102,8 +88,6 @@ impl SchedulerService {
     }
 
     pub async fn reload_schedule(&self, _schedule_id: Uuid) -> Result<()> {
-        // TODO: suppression fine par job UUID
-        // Pour l'instant, rechargement complet acceptable pour des dizaines de schedules
         self.load_and_schedule_all().await
     }
 }

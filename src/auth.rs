@@ -124,36 +124,37 @@ const LOGIN_HTML: &str = r##"<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #0B0F1E; color: #C8D0E0;
+      background: #F4F6F9; color: #1A2033;
       display: flex; align-items: center; justify-content: center; height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
     .card {
-      background: #0F1428;
-      border: 1px solid rgba(255,255,255,.08);
+      background: #FFFFFF;
+      border: 1px solid #E2E8F0;
       border-radius: 18px; padding: 36px 32px; width: 360px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.6);
+      box-shadow: 0 8px 40px rgba(11,15,30,.1);
     }
     .logo-row {
       display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
     }
-    .brand-name { font-size: 16px; font-weight: 700; color: #FFFFFF; }
-    .brand-sub  { font-size: 11px; color: #3A4460; margin-top: 2px; }
+    .brand-name { font-size: 16px; font-weight: 700; color: #0B0F1E; }
+    .brand-sub  { font-size: 11px; color: #94A3B8; margin-top: 2px; }
     label {
       display: block; font-size: 10px; font-weight: 600;
-      color: #4B5775; margin-bottom: 7px;
+      color: #94A3B8; margin-bottom: 7px;
       text-transform: uppercase; letter-spacing: 0.8px;
     }
     input[type=password] {
-      width: 100%; background: #080C1A;
-      border: 1px solid rgba(255,255,255,.08);
-      color: #C8D0E0; padding: 10px 14px; border-radius: 9px;
+      width: 100%; background: #F8FAFC;
+      border: 1px solid #E2E8F0;
+      color: #0B0F1E; padding: 10px 14px; border-radius: 9px;
       font-size: 14px; font-family: inherit; outline: none;
       margin-bottom: 18px; transition: border .15s, box-shadow .15s;
     }
     input[type=password]:focus {
       border-color: #CB1C42;
-      box-shadow: 0 0 0 3px rgba(203,28,66,.1);
+      box-shadow: 0 0 0 3px rgba(203,28,66,.08);
+      background: #FFFFFF;
     }
     button {
       width: 100%; background: #CB1C42; color: #fff; border: none;
@@ -161,12 +162,12 @@ const LOGIN_HTML: &str = r##"<!DOCTYPE html>
       font-size: 14px; font-weight: 600; font-family: inherit;
       transition: background .15s, box-shadow .15s;
     }
-    button:hover { background: #E01E4A; box-shadow: 0 4px 16px rgba(203,28,66,.4); }
+    button:hover { background: #E01E4A; box-shadow: 0 4px 16px rgba(203,28,66,.35); }
     .err {
       display: flex; align-items: center; gap: 8px;
-      color: #f87171; font-size: 12px; font-weight: 500;
-      background: rgba(248,113,113,.07);
-      border: 1px solid rgba(248,113,113,.15);
+      color: #DC2626; font-size: 12px; font-weight: 500;
+      background: #FFF5F5;
+      border: 1px solid #FECACA;
       border-radius: 8px; padding: 9px 12px; margin-bottom: 16px;
     }
   </style>

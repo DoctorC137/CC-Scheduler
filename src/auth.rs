@@ -124,31 +124,30 @@ const LOGIN_HTML: &str = r##"<!DOCTYPE html>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: #080508; color: #EDE4E8;
+      background: #0B0F1E; color: #C8D0E0;
       display: flex; align-items: center; justify-content: center; height: 100vh;
       -webkit-font-smoothing: antialiased;
     }
     .card {
-      background: #0F090D;
-      border: 1px solid rgba(203,28,66,.15);
-      border-radius: 20px; padding: 40px 36px; width: 360px;
-      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+      background: #0F1428;
+      border: 1px solid rgba(255,255,255,.08);
+      border-radius: 18px; padding: 36px 32px; width: 360px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.6);
     }
     .logo-row {
       display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
     }
-    .brand { }
-    .brand-name { font-size: 16px; font-weight: 700; color: #F5EBEe; }
-    .brand-sub  { font-size: 11px; color: #5C2D3A; margin-top: 2px; }
+    .brand-name { font-size: 16px; font-weight: 700; color: #FFFFFF; }
+    .brand-sub  { font-size: 11px; color: #3A4460; margin-top: 2px; }
     label {
       display: block; font-size: 10px; font-weight: 600;
-      color: #5C2D3A; margin-bottom: 7px;
+      color: #4B5775; margin-bottom: 7px;
       text-transform: uppercase; letter-spacing: 0.8px;
     }
     input[type=password] {
-      width: 100%; background: #080508;
-      border: 1px solid rgba(203,28,66,.15);
-      color: #EDE4E8; padding: 10px 14px; border-radius: 9px;
+      width: 100%; background: #080C1A;
+      border: 1px solid rgba(255,255,255,.08);
+      color: #C8D0E0; padding: 10px 14px; border-radius: 9px;
       font-size: 14px; font-family: inherit; outline: none;
       margin-bottom: 18px; transition: border .15s, box-shadow .15s;
     }
@@ -162,7 +161,7 @@ const LOGIN_HTML: &str = r##"<!DOCTYPE html>
       font-size: 14px; font-weight: 600; font-family: inherit;
       transition: background .15s, box-shadow .15s;
     }
-    button:hover { background: #E0204C; box-shadow: 0 4px 16px rgba(203,28,66,.35); }
+    button:hover { background: #E01E4A; box-shadow: 0 4px 16px rgba(203,28,66,.4); }
     .err {
       display: flex; align-items: center; gap: 8px;
       color: #f87171; font-size: 12px; font-weight: 500;
@@ -176,19 +175,19 @@ const LOGIN_HTML: &str = r##"<!DOCTYPE html>
   <div class="card">
     <div class="logo-row">
       <svg width="40" height="40" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg">
-        <polygon points="50,2  7,29  33,62  50,38"  fill="#F0907A"/>
-        <polygon points="50,2  50,38 93,29"         fill="#DD4848"/>
-        <polygon points="7,29  7,87  33,62"         fill="#C83838"/>
+        <polygon points="50,2  7,29  33,62  50,38"  fill="#F2926B"/>
+        <polygon points="50,2  50,38 93,29"         fill="#E55C3A"/>
+        <polygon points="7,29  7,87  33,62"         fill="#CC3A28"/>
         <polygon points="50,38 33,62 67,62"         fill="#C03030"/>
-        <polygon points="50,38 67,62 93,29"         fill="#A82828"/>
-        <polygon points="93,29 67,62 93,87"         fill="#902020"/>
-        <polygon points="33,62 7,87  50,86"         fill="#7C1530"/>
-        <polygon points="33,62 50,86 67,62"         fill="#6A1028"/>
-        <polygon points="67,62 50,86 93,87"         fill="#580D22"/>
-        <polygon points="7,87  50,114 50,86"        fill="#65122A"/>
-        <polygon points="50,86 50,114 93,87"        fill="#4A0D1E"/>
+        <polygon points="50,38 67,62 93,29"         fill="#A82020"/>
+        <polygon points="93,29 67,62 93,87"         fill="#8C1818"/>
+        <polygon points="33,62 7,87  50,86"         fill="#721028"/>
+        <polygon points="33,62 50,86 67,62"         fill="#600D20"/>
+        <polygon points="67,62 50,86 93,87"         fill="#4E0A1A"/>
+        <polygon points="7,87  50,114 50,86"        fill="#5C1024"/>
+        <polygon points="50,86 50,114 93,87"        fill="#420B18"/>
       </svg>
-      <div class="brand">
+      <div>
         <div class="brand-name">CC Scheduler</div>
         <div class="brand-sub">Clever Cloud</div>
       </div>

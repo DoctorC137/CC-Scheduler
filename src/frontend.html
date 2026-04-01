@@ -5,121 +5,335 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>CC Scheduler</title>
   <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f0f1a; color: #e0e0f0; height: 100vh; display: flex; overflow: hidden; }
 
-    /* Sidebar */
-    #sidebar { width: 220px; min-width: 220px; background: #13132a; border-right: 1px solid #1e1e3a; display: flex; flex-direction: column; }
-    #sidebar-header { padding: 18px 16px 12px; border-bottom: 1px solid #1e1e3a; }
-    #sidebar-header h1 { font-size: 15px; font-weight: 700; color: #a78bfa; letter-spacing: 0.3px; }
-    #sidebar-header p { font-size: 11px; color: #5050809; margin-top: 2px; color: #60609a; }
-    #org-section-title { padding: 14px 16px 6px; font-size: 10px; text-transform: uppercase; letter-spacing: 1.2px; color: #50508a; }
-    #org-list { flex: 1; overflow-y: auto; }
-    .org-item { padding: 9px 16px; cursor: pointer; font-size: 13px; color: #a0a0c0; border-left: 2px solid transparent; transition: all 0.15s; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .org-item:hover { background: #1a1a35; color: #c0c0e0; }
-    .org-item.active { background: #1e1a3a; border-left-color: #7c3aed; color: #c4b5fd; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #080508;
+      color: #EDE4E8;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+      -webkit-font-smoothing: antialiased;
+    }
 
-    /* Main */
-    #main { flex: 1; overflow-y: auto; padding: 28px 32px; }
-    #main-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 24px; }
-    #main-header h2 { font-size: 18px; font-weight: 600; color: #e0e0f8; }
+    /* ── Sidebar ─────────────────────────────────────────── */
+    #sidebar {
+      width: 248px; min-width: 248px;
+      background: #0F090D;
+      border-right: 1px solid rgba(203,28,66,.12);
+      display: flex; flex-direction: column;
+    }
 
-    /* App grid */
-    #apps-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(310px, 1fr)); gap: 14px; }
+    #sidebar-header {
+      padding: 22px 20px 18px;
+      border-bottom: 1px solid rgba(203,28,66,.1);
+    }
 
-    /* App card */
-    .app-card { background: #13132a; border: 1px solid #1e1e3a; border-radius: 10px; padding: 18px; }
-    .app-card-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 14px; }
+    .logo-row {
+      display: flex; align-items: center; gap: 11px; margin-bottom: 5px;
+    }
+
+    /* CC gem logo SVG inline */
+    .cc-gem { flex-shrink: 0; }
+
+    .brand-name {
+      font-size: 15px; font-weight: 700;
+      color: #F5EBEe;
+      letter-spacing: -0.2px;
+    }
+    .brand-sub {
+      font-size: 11px; color: #5C2D3A; margin-top: 1px; letter-spacing: 0.1px;
+    }
+
+    #org-section-title {
+      padding: 18px 20px 7px;
+      font-size: 10px; font-weight: 600;
+      text-transform: uppercase; letter-spacing: 1.5px;
+      color: #40202A;
+    }
+
+    #org-list { flex: 1; overflow-y: auto; padding: 2px 8px; }
+
+    .org-item {
+      padding: 8px 12px;
+      cursor: pointer; font-size: 13px; font-weight: 500;
+      color: #7A5060;
+      border-radius: 8px;
+      border-left: 2px solid transparent;
+      transition: all 0.15s;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      margin-bottom: 2px;
+    }
+    .org-item:hover { background: rgba(203,28,66,.07); color: #C08898; }
+    .org-item.active {
+      background: rgba(203,28,66,.12);
+      border-left-color: #CB1C42;
+      color: #F0D0D8;
+    }
+
+    .sidebar-footer {
+      padding: 14px 20px;
+      border-top: 1px solid rgba(203,28,66,.08);
+    }
+    .logout-link {
+      display: flex; align-items: center; gap: 7px;
+      font-size: 12px; color: #40202A; text-decoration: none;
+      transition: color .15s; font-weight: 500;
+    }
+    .logout-link:hover { color: #CB1C42; }
+    .logout-link svg { opacity: .6; }
+
+    /* ── Main ────────────────────────────────────────────── */
+    #main { flex: 1; overflow-y: auto; padding: 36px 40px; }
+
+    #main-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 32px;
+    }
+    #main-header h2 {
+      font-size: 22px; font-weight: 700; color: #F5EBEe;
+      letter-spacing: -0.4px;
+    }
+    .app-count {
+      font-size: 12px; font-weight: 500;
+      color: #5C2D3A;
+      background: rgba(203,28,66,.08);
+      padding: 4px 10px; border-radius: 20px;
+    }
+
+    /* ── App grid ────────────────────────────────────────── */
+    #apps-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+      gap: 16px;
+    }
+
+    /* ── App card ────────────────────────────────────────── */
+    .app-card {
+      background: #0F090D;
+      border: 1px solid rgba(203,28,66,.1);
+      border-radius: 14px; padding: 20px;
+      transition: border-color .2s, box-shadow .2s;
+    }
+    .app-card:hover {
+      border-color: rgba(203,28,66,.22);
+      box-shadow: 0 4px 24px rgba(203,28,66,.06);
+    }
+
+    .app-card-header {
+      display: flex; align-items: flex-start;
+      justify-content: space-between; margin-bottom: 16px;
+    }
     .app-card-title { flex: 1; min-width: 0; }
-    .app-card-title h3 { font-size: 13px; font-weight: 600; color: #d0d0f0; display: flex; align-items: center; gap: 7px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .app-card-title .app-id { font-size: 10px; color: #404070; font-family: monospace; margin-top: 3px; }
+    .app-card-title h3 {
+      font-size: 13px; font-weight: 600; color: #F0E4E8;
+      display: flex; align-items: center; gap: 8px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    }
+    .app-id {
+      font-size: 10px; color: #3A1820;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      margin-top: 4px; letter-spacing: 0.3px;
+    }
 
     /* Status dot */
     .dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; }
-    .dot-on { background: #4ade80; box-shadow: 0 0 6px #4ade8088; }
-    .dot-off { background: #303060; }
+    .dot-on  { background: #CB1C42; box-shadow: 0 0 7px rgba(203,28,66,.5); }
+    .dot-off { background: #2A1018; }
 
-    /* Schedule block */
-    .sched-block { background: #0d0d22; border: 1px solid #1a1a38; border-radius: 7px; padding: 11px 13px; margin-bottom: 10px; }
-    .sched-row { display: flex; align-items: center; justify-content: space-between; font-size: 12px; margin-bottom: 7px; }
+    /* ── Schedule block ──────────────────────────────────── */
+    .sched-block {
+      background: #080508;
+      border: 1px solid rgba(203,28,66,.08);
+      border-radius: 10px; padding: 13px 15px; margin-bottom: 10px;
+    }
+    .sched-row {
+      display: flex; align-items: center; justify-content: space-between;
+      font-size: 12px; margin-bottom: 8px;
+    }
     .sched-row:last-child { margin-bottom: 0; }
-    .sched-label { color: #50508a; font-size: 11px; min-width: 50px; }
-    .cron-tag { background: #1e1040; color: #a78bfa; padding: 2px 8px; border-radius: 4px; font-family: monospace; font-size: 11px; }
-    .tz-tag { color: #6060a0; font-size: 11px; }
+    .sched-label { color: #4A2028; font-size: 11px; font-weight: 500; min-width: 50px; }
 
-    /* Toggle */
-    .sw { position: relative; display: inline-flex; align-items: center; cursor: pointer; gap: 7px; }
+    .cron-tag {
+      background: rgba(203,28,66,.1);
+      color: #E8553E;
+      padding: 2px 9px; border-radius: 5px;
+      font-family: 'SF Mono', 'Fira Code', monospace;
+      font-size: 11px; font-weight: 500;
+    }
+    .tz-tag { color: #5C2D3A; font-size: 11px; }
+
+    /* ── Toggle ──────────────────────────────────────────── */
+    .sw { position: relative; display: inline-flex; align-items: center; cursor: pointer; gap: 8px; }
     .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
-    .sw-track { width: 30px; height: 17px; background: #252545; border-radius: 9px; transition: background .2s; position: relative; }
-    .sw input:checked ~ .sw-track { background: #7c3aed; }
-    .sw-thumb { position: absolute; top: 2px; left: 2px; width: 13px; height: 13px; background: white; border-radius: 50%; transition: left .2s; }
+    .sw-track {
+      width: 30px; height: 17px;
+      background: #1E0C14; border-radius: 9px;
+      transition: background .2s; position: relative;
+    }
+    .sw input:checked ~ .sw-track { background: #CB1C42; }
+    .sw-thumb {
+      position: absolute; top: 2px; left: 2px;
+      width: 13px; height: 13px;
+      background: white; border-radius: 50%; transition: left .2s;
+    }
     .sw input:checked ~ .sw-track .sw-thumb { left: 15px; }
-    .sw-label { font-size: 11px; color: #7070a0; }
+    .sw-label { font-size: 11px; color: #5C2D3A; font-weight: 500; }
 
-    /* Buttons */
-    .btn { display: inline-flex; align-items: center; gap: 4px; padding: 5px 11px; border-radius: 5px; border: none; cursor: pointer; font-size: 12px; font-weight: 500; transition: all .15s; white-space: nowrap; }
-    .btn-purple { background: #4c1d95; color: #c4b5fd; }
-    .btn-purple:hover { background: #5b21b6; }
-    .btn-green { background: #052e16; color: #4ade80; border: 1px solid #14532d; }
-    .btn-green:hover { background: #14532d; }
-    .btn-red { background: #1c0a0a; color: #f87171; border: 1px solid #3b1010; }
-    .btn-red:hover { background: #3b1010; }
-    .btn-ghost { background: transparent; color: #7070a0; border: 1px solid #252548; }
-    .btn-ghost:hover { background: #1a1a38; color: #a0a0c0; }
-    .btn-icon { padding: 5px 8px; }
-    .btn-row { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 10px; }
-    .btn-add { background: #1a1040; color: #7c5dfa; border: 1px dashed #3a2070; width: 100%; justify-content: center; padding: 8px; margin-top: 4px; }
-    .btn-add:hover { background: #251a50; border-style: solid; }
+    /* ── Buttons ─────────────────────────────────────────── */
+    .btn {
+      display: inline-flex; align-items: center; gap: 5px;
+      padding: 5px 12px; border-radius: 7px; border: none;
+      cursor: pointer; font-size: 12px; font-weight: 600;
+      font-family: inherit;
+      transition: all .15s; white-space: nowrap;
+    }
+    .btn-primary { background: #CB1C42; color: #fff; }
+    .btn-primary:hover { background: #E0204C; box-shadow: 0 2px 12px rgba(203,28,66,.35); }
+    .btn-green  { background: rgba(74,222,128,.08); color: #4ade80; border: 1px solid rgba(74,222,128,.15); }
+    .btn-green:hover  { background: rgba(74,222,128,.14); }
+    .btn-red    { background: rgba(248,113,113,.07); color: #f87171; border: 1px solid rgba(248,113,113,.15); }
+    .btn-red:hover    { background: rgba(248,113,113,.13); }
+    .btn-ghost  { background: transparent; color: #5C2D3A; border: 1px solid rgba(203,28,66,.12); }
+    .btn-ghost:hover  { background: rgba(203,28,66,.07); color: #9A7080; }
+    .btn-icon   { padding: 5px 9px; }
+    .btn-row    { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 12px; }
+    .btn-add {
+      background: transparent;
+      color: #CB1C42; border: 1px dashed rgba(203,28,66,.25);
+      width: 100%; justify-content: center; padding: 9px; margin-top: 4px;
+      border-radius: 8px;
+    }
+    .btn-add:hover { background: rgba(203,28,66,.06); border-style: solid; }
 
-    /* Empty/loading states */
-    .state-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; height: calc(100vh - 120px); color: #303060; text-align: center; }
-    .state-empty svg { margin-bottom: 16px; opacity: 0.3; }
-    .state-empty p { font-size: 14px; }
-    .loader-inline { display: inline-block; width: 14px; height: 14px; border: 2px solid #252548; border-top-color: #7c3aed; border-radius: 50%; animation: spin .7s linear infinite; }
+    /* ── States ──────────────────────────────────────────── */
+    .state-empty {
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      height: calc(100vh - 140px); color: #2A1018; text-align: center;
+    }
+    .state-empty p { font-size: 14px; margin-top: 16px; font-weight: 500; }
+
+    .loader-inline {
+      display: inline-block; width: 14px; height: 14px;
+      border: 2px solid rgba(203,28,66,.15); border-top-color: #CB1C42;
+      border-radius: 50%; animation: spin .7s linear infinite;
+    }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* Modal */
-    #overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,10,.75); z-index: 50; align-items: center; justify-content: center; }
+    /* ── Modal ───────────────────────────────────────────── */
+    #overlay {
+      display: none; position: fixed; inset: 0;
+      background: rgba(5,2,4,.85);
+      backdrop-filter: blur(4px);
+      z-index: 50; align-items: center; justify-content: center;
+    }
     #overlay.open { display: flex; }
-    #modal { background: #13132a; border: 1px solid #252545; border-radius: 14px; padding: 26px; width: 440px; max-width: 96vw; max-height: 92vh; overflow-y: auto; }
-    #modal h3 { font-size: 15px; margin-bottom: 20px; color: #d0d0f0; }
-    .fg { margin-bottom: 14px; }
-    .fg label { display: block; font-size: 11px; color: #6060909; margin-bottom: 5px; color: #7070a8; }
-    .fg input, .fg select { width: 100%; background: #0d0d22; border: 1px solid #1e1e3a; color: #d0d0f0; padding: 8px 11px; border-radius: 6px; font-size: 13px; outline: none; transition: border .15s; }
-    .fg input:focus, .fg select:focus { border-color: #6d28d9; }
-    .fg input:disabled { opacity: .4; cursor: default; }
-    .fg-hint { font-size: 10px; color: #404068; margin-top: 4px; }
-    .fg-row { display: flex; gap: 10px; }
+    #modal {
+      background: #0F090D;
+      border: 1px solid rgba(203,28,66,.15);
+      border-radius: 18px; padding: 30px;
+      width: 460px; max-width: 96vw; max-height: 92vh; overflow-y: auto;
+      box-shadow: 0 24px 64px rgba(0,0,0,.6);
+    }
+    #modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 24px; color: #F5EBEe; }
+
+    .fg { margin-bottom: 16px; }
+    .fg label {
+      display: block; font-size: 10px; font-weight: 600;
+      color: #5C2D3A; margin-bottom: 6px;
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
+    .fg input, .fg select {
+      width: 100%; background: #080508;
+      border: 1px solid rgba(203,28,66,.12);
+      color: #EDE4E8; padding: 9px 13px; border-radius: 8px;
+      font-size: 13px; font-family: inherit; outline: none;
+      transition: border .15s;
+    }
+    .fg input:focus, .fg select:focus { border-color: #CB1C42; box-shadow: 0 0 0 3px rgba(203,28,66,.08); }
+    .fg input:disabled { opacity: .35; cursor: default; }
+    .fg-hint { font-size: 10px; color: #3A1820; margin-top: 5px; }
+    .fg-row { display: flex; gap: 12px; }
     .fg-row .fg { flex: 1; }
-    .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 18px; border-top: 1px solid #1e1e3a; padding-top: 16px; }
 
-    /* Toast */
-    #toast { position: fixed; bottom: 20px; right: 20px; padding: 10px 16px; border-radius: 8px; font-size: 13px; transform: translateY(70px); transition: transform .25s; z-index: 100; pointer-events: none; }
-    #toast.ok { background: #071a0f; border: 1px solid #14532d; color: #4ade80; transform: translateY(0); }
-    #toast.err { background: #1a0707; border: 1px solid #3b1010; color: #f87171; transform: translateY(0); }
+    .modal-footer {
+      display: flex; justify-content: flex-end; gap: 8px;
+      margin-top: 22px; border-top: 1px solid rgba(203,28,66,.08); padding-top: 20px;
+    }
 
-    /* Scrollbar */
-    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: transparent; } ::-webkit-scrollbar-thumb { background: #252548; border-radius: 3px; }
+    /* ── Toast ───────────────────────────────────────────── */
+    #toast {
+      position: fixed; bottom: 24px; right: 24px;
+      padding: 11px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      transform: translateY(80px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
+      z-index: 100; pointer-events: none;
+    }
+    #toast.ok  { background: #060F09; border: 1px solid rgba(74,222,128,.2); color: #4ade80; transform: translateY(0); }
+    #toast.err { background: #0F0507; border: 1px solid rgba(203,28,66,.3); color: #f87171; transform: translateY(0); }
+
+    /* ── Scrollbar ───────────────────────────────────────── */
+    ::-webkit-scrollbar { width: 4px; }
+    ::-webkit-scrollbar-track { background: transparent; }
+    ::-webkit-scrollbar-thumb { background: rgba(203,28,66,.15); border-radius: 2px; }
+
+    /* select option color fix */
+    select option { background: #0F090D; color: #EDE4E8; }
   </style>
 </head>
 <body>
 
 <div id="sidebar">
   <div id="sidebar-header">
-    <div style="display:flex;align-items:center;justify-content:space-between">
-      <h1>CC Scheduler</h1>
-      <a href="/auth/logout" title="Déconnexion" style="color:#303060;font-size:13px;text-decoration:none" onmouseover="this.style.color='#7070a0'" onmouseout="this.style.color='#303060'">⏻</a>
+    <div class="logo-row">
+      <!-- CC gem logo (approximation SVG) -->
+      <svg class="cc-gem" width="38" height="38" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg">
+        <!-- Pointy-top hexagon. Vertices: T(50,2) TR(93,29) BR(93,87) B(50,114) BL(7,87) UL(7,29) -->
+        <!-- Internal points: A(50,38) B(33,62) C(67,62) D(50,86) -->
+        <polygon points="50,2  7,29  33,62  50,38"  fill="#F0907A"/>
+        <polygon points="50,2  50,38 93,29"         fill="#DD4848"/>
+        <polygon points="7,29  7,87  33,62"         fill="#C83838"/>
+        <polygon points="50,38 33,62 67,62"         fill="#C03030"/>
+        <polygon points="50,38 67,62 93,29"         fill="#A82828"/>
+        <polygon points="93,29 67,62 93,87"         fill="#902020"/>
+        <polygon points="33,62 7,87  50,86"         fill="#7C1530"/>
+        <polygon points="33,62 50,86 67,62"         fill="#6A1028"/>
+        <polygon points="67,62 50,86 93,87"         fill="#580D22"/>
+        <polygon points="7,87  50,114 50,86"        fill="#65122A"/>
+        <polygon points="50,86 50,114 93,87"        fill="#4A0D1E"/>
+      </svg>
+      <div>
+        <div class="brand-name">CC Scheduler</div>
+        <div class="brand-sub">Clever Cloud</div>
+      </div>
     </div>
-    <p>Gestion des horaires</p>
   </div>
-  <div id="org-section-title">Organisations</div>
-  <div id="org-list"><div style="padding:16px;color:#404070;font-size:12px;display:flex;align-items:center;gap:8px"><span class="loader-inline"></span> Chargement…</div></div>
+
+  <div id="org-section-title">Organisation</div>
+  <div id="org-list">
+    <div style="padding:14px 12px;color:#40202A;font-size:12px;display:flex;align-items:center;gap:8px">
+      <span class="loader-inline"></span> Chargement…
+    </div>
+  </div>
+
+  <div class="sidebar-footer">
+    <a href="/auth/logout" class="logout-link">
+      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
+      </svg>
+      Déconnexion
+    </a>
+  </div>
 </div>
 
 <div id="main">
   <div id="content">
     <div class="state-empty">
-      <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/></svg>
+      <svg width="48" height="48" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" style="color:#2A1018">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6v6l4 2m6-2a10 10 0 11-20 0 10 10 0 0120 0z"/>
+      </svg>
       <p>Sélectionne une organisation</p>
     </div>
   </div>
@@ -138,17 +352,17 @@
         <input type="text" id="f-appname" disabled>
       </div>
       <div class="fg">
-        <label>Nom du schedule <span style="color:#404068">(optionnel)</span></label>
+        <label>Nom du schedule <span style="color:#3A1820;text-transform:none;letter-spacing:0">(optionnel)</span></label>
         <input type="text" id="f-name" placeholder="ex: Nuit semaine">
       </div>
       <div class="fg-row">
         <div class="fg">
-          <label>Extinction (cron stop)</label>
+          <label>Extinction — cron stop</label>
           <input type="text" id="f-stop" placeholder="0 20 * * 1-5">
           <div class="fg-hint">Laisser vide pour désactiver</div>
         </div>
         <div class="fg">
-          <label>Démarrage (cron start)</label>
+          <label>Démarrage — cron start</label>
           <input type="text" id="f-start" placeholder="0 8 * * 1-5">
         </div>
       </div>
@@ -167,20 +381,21 @@
             <option value="Asia/Shanghai">Asia/Shanghai</option>
           </select>
         </div>
-        <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:1px">
+        <div class="fg" style="display:flex;align-items:flex-end;padding-bottom:2px">
           <label class="sw" style="cursor:pointer">
             <input type="checkbox" id="f-enabled" checked>
             <span class="sw-track"><span class="sw-thumb"></span></span>
-            <span class="sw-label" style="font-size:13px;color:#a0a0c0">Actif</span>
+            <span class="sw-label" style="font-size:13px;color:#A07080">Actif</span>
           </label>
         </div>
       </div>
-      <div class="fg-hint" style="margin-top:-6px;margin-bottom:10px">
-        Format cron : <code style="color:#7c5dfa">minute heure * * jours</code> — ex: <code style="color:#7c5dfa">0 20 * * 1-5</code> = lun-ven à 20h
+      <div class="fg-hint" style="margin-top:-8px;margin-bottom:12px">
+        Format : <code style="color:#E8553E;font-family:monospace">minute heure * * jours</code>
+        — ex: <code style="color:#E8553E;font-family:monospace">0 20 * * 1-5</code> = lun–ven à 20h
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Annuler</button>
-        <button type="submit" class="btn btn-purple">Enregistrer</button>
+        <button type="submit" class="btn btn-primary">Enregistrer</button>
       </div>
     </form>
   </div>
@@ -204,20 +419,23 @@
     return r.json();
   }
 
-  // Load orgs on boot
+  // Charge les orgs au démarrage
   (async () => {
     try {
       const orgs = await req('GET', '/orgs');
       const list = document.getElementById('org-list');
       if (!Array.isArray(orgs) || orgs.length === 0) {
-        list.innerHTML = '<div style="padding:16px;color:#404070;font-size:12px">Aucune organisation trouvée</div>';
+        list.innerHTML = '<div style="padding:14px 12px;color:#40202A;font-size:12px">Aucune organisation trouvée</div>';
         return;
       }
       list.innerHTML = orgs.map(o =>
         `<div class="org-item" onclick="loadOrg('${esc(o.id)}','${esc(o.name)}')" id="org-${esc(o.id)}">${esc(o.name)}</div>`
       ).join('');
+      // Auto-sélectionne si une seule org
+      if (orgs.length === 1) loadOrg(orgs[0].id, orgs[0].name);
     } catch(e) {
-      document.getElementById('org-list').innerHTML = `<div style="padding:16px;color:#f87171;font-size:12px">Erreur: ${esc(e.message)}</div>`;
+      document.getElementById('org-list').innerHTML =
+        `<div style="padding:14px 12px;color:#f87171;font-size:12px">${esc(e.message)}</div>`;
     }
   })();
 
@@ -228,7 +446,7 @@
 
     document.getElementById('content').innerHTML =
       `<div id="main-header"><h2>${esc(orgName)}</h2></div>` +
-      `<div style="display:flex;align-items:center;gap:10px;color:#50508a"><span class="loader-inline"></span> Chargement des applications…</div>`;
+      `<div style="display:flex;align-items:center;gap:10px;color:#40202A;font-size:13px"><span class="loader-inline"></span> Chargement…</div>`;
 
     try {
       const [apps, scheds] = await Promise.all([
@@ -239,19 +457,25 @@
       renderOrg(orgId, orgName, Array.isArray(apps) ? apps : [], schedules);
     } catch(e) {
       document.getElementById('content').innerHTML =
-        `<div id="main-header"><h2>${esc(orgName)}</h2></div><div style="color:#f87171">Erreur: ${esc(e.message)}</div>`;
+        `<div id="main-header"><h2>${esc(orgName)}</h2></div>` +
+        `<div style="color:#f87171;font-size:13px">Erreur : ${esc(e.message)}</div>`;
     }
   }
 
   function renderOrg(orgId, orgName, apps, scheds) {
-    if (apps.length === 0) {
+    const count = apps.length;
+    if (count === 0) {
       document.getElementById('content').innerHTML =
-        `<div id="main-header"><h2>${esc(orgName)}</h2></div><div style="color:#404070;padding:40px 0;text-align:center">Aucune application dans cette organisation</div>`;
+        `<div id="main-header"><h2>${esc(orgName)}</h2></div>` +
+        `<div style="color:#3A1820;padding:48px 0;text-align:center;font-size:14px">Aucune application dans cette organisation</div>`;
       return;
     }
     const cards = apps.map(app => buildCard(orgId, app, scheds.filter(s => s.app_id === app.id))).join('');
     document.getElementById('content').innerHTML =
-      `<div id="main-header"><h2>${esc(orgName)}</h2><span style="font-size:12px;color:#50508a">${apps.length} application${apps.length>1?'s':''}</span></div>` +
+      `<div id="main-header">
+        <h2>${esc(orgName)}</h2>
+        <span class="app-count">${count} app${count > 1 ? 's' : ''}</span>
+      </div>` +
       `<div id="apps-grid">${cards}</div>`;
   }
 
@@ -261,24 +485,24 @@
 
     const schedHtml = appScheds.map(s => `
       <div class="sched-block" id="sb-${s.id}">
-        ${s.name ? `<div class="sched-row"><span class="sched-label">Nom</span><span style="font-size:12px">${esc(s.name)}</span></div>` : ''}
-        ${s.cron_stop  ? `<div class="sched-row"><span class="sched-label">Stop</span><span class="cron-tag">${esc(s.cron_stop)}</span></div>` : ''}
+        ${s.name ? `<div class="sched-row"><span class="sched-label">Nom</span><span style="font-size:12px;color:#C09098">${esc(s.name)}</span></div>` : ''}
+        ${s.cron_stop  ? `<div class="sched-row"><span class="sched-label">Stop</span><span class="cron-tag">${esc(s.cron_stop)}</span></div>`  : ''}
         ${s.cron_start ? `<div class="sched-row"><span class="sched-label">Start</span><span class="cron-tag">${esc(s.cron_start)}</span></div>` : ''}
         <div class="sched-row">
           <span class="sched-label">TZ</span>
           <span class="tz-tag">${esc(s.timezone)}</span>
         </div>
-        <div class="sched-row" style="margin-top:8px">
-          <label class="sw" onclick="toggle('${s.id}',this)">
-            <input type="checkbox" ${s.enabled?'checked':''} onchange="toggleSched('${s.id}',this.checked)">
+        <div class="sched-row" style="margin-top:10px">
+          <label class="sw">
+            <input type="checkbox" ${s.enabled ? 'checked' : ''} onchange="toggleSched('${s.id}',this.checked)">
             <span class="sw-track"><span class="sw-thumb"></span></span>
-            <span class="sw-label">${s.enabled?'Actif':'Inactif'}</span>
+            <span class="sw-label">${s.enabled ? 'Actif' : 'Inactif'}</span>
           </label>
           <div style="display:flex;gap:5px">
-            <button class="btn btn-green btn-icon" title="Démarrer maintenant" onclick="trigger('${s.id}','start')">▶</button>
-            <button class="btn btn-red btn-icon" title="Éteindre maintenant" onclick="trigger('${s.id}','stop')">■</button>
-            <button class="btn btn-ghost btn-icon" title="Modifier" onclick="openModal('${orgId}','${app.id}','${esc(name)}','${s.id}')">✎</button>
-            <button class="btn btn-red btn-icon" title="Supprimer" onclick="delSched('${s.id}')">✕</button>
+            <button class="btn btn-green btn-icon" title="Démarrer maintenant"  onclick="trigger('${s.id}','start')">▶</button>
+            <button class="btn btn-red   btn-icon" title="Éteindre maintenant"  onclick="trigger('${s.id}','stop')">■</button>
+            <button class="btn btn-ghost btn-icon" title="Modifier"             onclick="openModal('${orgId}','${app.id}','${esc(name)}','${s.id}')">✎</button>
+            <button class="btn btn-red   btn-icon" title="Supprimer"            onclick="delSched('${s.id}')">✕</button>
           </div>
         </div>
       </div>
@@ -288,29 +512,31 @@
       <div class="app-card" id="card-${app.id}">
         <div class="app-card-header">
           <div class="app-card-title">
-            <h3><span class="dot ${hasScheds?'dot-on':'dot-off'}"></span>${esc(name)}</h3>
+            <h3><span class="dot ${hasScheds ? 'dot-on' : 'dot-off'}"></span>${esc(name)}</h3>
             <div class="app-id">${app.id}</div>
           </div>
         </div>
         ${schedHtml}
-        <button class="btn btn-add" onclick="openModal('${orgId}','${app.id}','${esc(name)}',null)">+ Ajouter un schedule</button>
+        <button class="btn btn-add" onclick="openModal('${orgId}','${app.id}','${esc(name)}',null)">
+          + Ajouter un schedule
+        </button>
       </div>
     `;
   }
 
   function openModal(orgId, appId, appName, schedId) {
-    document.getElementById('f-id').value = schedId || '';
-    document.getElementById('f-org').value = orgId;
-    document.getElementById('f-app').value = appId;
+    document.getElementById('f-id').value     = schedId || '';
+    document.getElementById('f-org').value    = orgId;
+    document.getElementById('f-app').value    = appId;
     document.getElementById('f-appname').value = appName;
     document.getElementById('modal-title').textContent = schedId ? 'Modifier le schedule' : 'Ajouter un schedule';
 
     if (schedId) {
       const s = schedules.find(s => s.id === schedId);
-      document.getElementById('f-name').value  = s?.name || '';
-      document.getElementById('f-stop').value  = s?.cron_stop || '';
-      document.getElementById('f-start').value = s?.cron_start || '';
-      document.getElementById('f-tz').value    = s?.timezone || 'Europe/Paris';
+      document.getElementById('f-name').value    = s?.name || '';
+      document.getElementById('f-stop').value    = s?.cron_stop || '';
+      document.getElementById('f-start').value   = s?.cron_start || '';
+      document.getElementById('f-tz').value      = s?.timezone || 'Europe/Paris';
       document.getElementById('f-enabled').checked = s?.enabled ?? true;
     } else {
       document.getElementById('sched-form').reset();
@@ -321,7 +547,9 @@
   }
 
   function closeModal() { document.getElementById('overlay').classList.remove('open'); }
-  document.getElementById('overlay').addEventListener('click', e => { if (e.target === document.getElementById('overlay')) closeModal(); });
+  document.getElementById('overlay').addEventListener('click', e => {
+    if (e.target === document.getElementById('overlay')) closeModal();
+  });
 
   document.getElementById('sched-form').addEventListener('submit', async e => {
     e.preventDefault();
@@ -345,11 +573,8 @@
     }
 
     try {
-      if (isEdit) {
-        await req('PUT',  '/schedules/' + schedId, base);
-      } else {
-        await req('POST', '/schedules', base);
-      }
+      if (isEdit) { await req('PUT',  '/schedules/' + schedId, base); }
+      else        { await req('POST', '/schedules', base); }
       closeModal();
       toast('Schedule enregistré ✓');
       loadOrg(currentOrg.id, currentOrg.name);
@@ -384,7 +609,7 @@
   }
 
   function esc(s) {
-    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
   let toastT;
@@ -393,7 +618,7 @@
     el.textContent = msg;
     el.className = isErr ? 'err' : 'ok';
     clearTimeout(toastT);
-    toastT = setTimeout(() => el.className = '', 3000);
+    toastT = setTimeout(() => el.className = '', 3200);
   }
 </script>
 </body>

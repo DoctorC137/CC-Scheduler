@@ -112,38 +112,87 @@ fn extract_cookie(req: &Request<Body>, name: &str) -> Option<String> {
         })
 }
 
-const LOGIN_HTML: &str = r#"<!DOCTYPE html>
+const LOGIN_HTML: &str = r##"<!DOCTYPE html>
 <html lang="fr">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>CC Scheduler — Connexion</title>
+  <title>CC Scheduler</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-           background: #0f0f1a; color: #e0e0f0;
-           display: flex; align-items: center; justify-content: center; height: 100vh; }
-    .card { background: #13132a; border: 1px solid #1e1e3a; border-radius: 14px;
-            padding: 36px 32px; width: 340px; }
-    .logo { font-size: 15px; font-weight: 700; color: #a78bfa; margin-bottom: 6px; }
-    .sub  { font-size: 12px; color: #50508a; margin-bottom: 28px; }
-    label { display: block; font-size: 11px; color: #7070a8; margin-bottom: 5px; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: #080508; color: #EDE4E8;
+      display: flex; align-items: center; justify-content: center; height: 100vh;
+      -webkit-font-smoothing: antialiased;
+    }
+    .card {
+      background: #0F090D;
+      border: 1px solid rgba(203,28,66,.15);
+      border-radius: 20px; padding: 40px 36px; width: 360px;
+      box-shadow: 0 24px 64px rgba(0,0,0,.5);
+    }
+    .logo-row {
+      display: flex; align-items: center; gap: 12px; margin-bottom: 28px;
+    }
+    .brand { }
+    .brand-name { font-size: 16px; font-weight: 700; color: #F5EBEe; }
+    .brand-sub  { font-size: 11px; color: #5C2D3A; margin-top: 2px; }
+    label {
+      display: block; font-size: 10px; font-weight: 600;
+      color: #5C2D3A; margin-bottom: 7px;
+      text-transform: uppercase; letter-spacing: 0.8px;
+    }
     input[type=password] {
-      width: 100%; background: #0d0d22; border: 1px solid #1e1e3a; color: #d0d0f0;
-      padding: 9px 12px; border-radius: 6px; font-size: 13px; outline: none;
-      margin-bottom: 16px; transition: border .15s; }
-    input[type=password]:focus { border-color: #6d28d9; }
-    button { width: 100%; background: #4c1d95; color: #c4b5fd; border: none;
-             padding: 10px; border-radius: 6px; cursor: pointer; font-size: 13px;
-             font-weight: 500; transition: background .15s; }
-    button:hover { background: #5b21b6; }
-    .err { color: #f87171; font-size: 12px; margin-bottom: 14px; }
+      width: 100%; background: #080508;
+      border: 1px solid rgba(203,28,66,.15);
+      color: #EDE4E8; padding: 10px 14px; border-radius: 9px;
+      font-size: 14px; font-family: inherit; outline: none;
+      margin-bottom: 18px; transition: border .15s, box-shadow .15s;
+    }
+    input[type=password]:focus {
+      border-color: #CB1C42;
+      box-shadow: 0 0 0 3px rgba(203,28,66,.1);
+    }
+    button {
+      width: 100%; background: #CB1C42; color: #fff; border: none;
+      padding: 11px; border-radius: 9px; cursor: pointer;
+      font-size: 14px; font-weight: 600; font-family: inherit;
+      transition: background .15s, box-shadow .15s;
+    }
+    button:hover { background: #E0204C; box-shadow: 0 4px 16px rgba(203,28,66,.35); }
+    .err {
+      display: flex; align-items: center; gap: 8px;
+      color: #f87171; font-size: 12px; font-weight: 500;
+      background: rgba(248,113,113,.07);
+      border: 1px solid rgba(248,113,113,.15);
+      border-radius: 8px; padding: 9px 12px; margin-bottom: 16px;
+    }
   </style>
 </head>
 <body>
   <div class="card">
-    <div class="logo">CC Scheduler</div>
-    <div class="sub">Gestion des horaires Clever Cloud</div>
+    <div class="logo-row">
+      <svg width="40" height="40" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg">
+        <polygon points="50,2  7,29  33,62  50,38"  fill="#F0907A"/>
+        <polygon points="50,2  50,38 93,29"         fill="#DD4848"/>
+        <polygon points="7,29  7,87  33,62"         fill="#C83838"/>
+        <polygon points="50,38 33,62 67,62"         fill="#C03030"/>
+        <polygon points="50,38 67,62 93,29"         fill="#A82828"/>
+        <polygon points="93,29 67,62 93,87"         fill="#902020"/>
+        <polygon points="33,62 7,87  50,86"         fill="#7C1530"/>
+        <polygon points="33,62 50,86 67,62"         fill="#6A1028"/>
+        <polygon points="67,62 50,86 93,87"         fill="#580D22"/>
+        <polygon points="7,87  50,114 50,86"        fill="#65122A"/>
+        <polygon points="50,86 50,114 93,87"        fill="#4A0D1E"/>
+      </svg>
+      <div class="brand">
+        <div class="brand-name">CC Scheduler</div>
+        <div class="brand-sub">Clever Cloud</div>
+      </div>
+    </div>
     <form method="POST" action="/auth/login">
       <label>Mot de passe</label>
       <input type="password" name="password" autofocus placeholder="••••••••">
@@ -151,13 +200,12 @@ const LOGIN_HTML: &str = r#"<!DOCTYPE html>
     </form>
   </div>
   <script>
-    // Affiche une erreur si ?error=1
     if (new URLSearchParams(location.search).get('error')) {
       const err = document.createElement('div');
       err.className = 'err';
-      err.textContent = 'Mot de passe incorrect.';
+      err.innerHTML = '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Mot de passe incorrect.';
       document.querySelector('form').prepend(err);
     }
   </script>
 </body>
-</html>"#;
+</html>"##;

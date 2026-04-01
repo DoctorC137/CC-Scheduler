@@ -486,15 +486,23 @@
   function timeToCron(h, m, days) {
     if (!days.length) return null;
     const sorted = [...days].sort((a,b) => a-b);
-    return `${m} ${h} * * ${sorted.join(',')}`;
+    // 6-field format required by tokio-cron-scheduler: sec min hour dom month dow
+    return `0 ${m} ${h} * * ${sorted.join(',')}`;
   }
 
   function cronToParts(cron) {
     if (!cron) return null;
     const p = cron.trim().split(/\s+/);
-    if (p.length < 5) return null;
-    const days = p[4] === '*' ? [0,1,2,3,4,5,6] : p[4].split(',').map(Number);
-    return { h: parseInt(p[1]), m: parseInt(p[0]), days };
+    if (p.length === 6) {
+      // sec min hour dom month dow  (current format)
+      const days = p[5] === '*' ? [0,1,2,3,4,5,6] : p[5].split(',').map(Number);
+      return { h: parseInt(p[2]), m: parseInt(p[1]), days };
+    } else if (p.length === 5) {
+      // min hour dom month dow  (legacy 5-field)
+      const days = p[4] === '*' ? [0,1,2,3,4,5,6] : p[4].split(',').map(Number);
+      return { h: parseInt(p[1]), m: parseInt(p[0]), days };
+    }
+    return null;
   }
 
   function formatTime(h, m) {

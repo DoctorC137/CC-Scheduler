@@ -6,258 +6,256 @@
   <title>CC Scheduler</title>
   <style>
     @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
-
     * { box-sizing: border-box; margin: 0; padding: 0; }
 
     body {
-      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-      background: #F4F6F9;
-      color: #1A2033;
-      height: 100vh;
-      display: flex;
-      overflow: hidden;
+      font-family: 'Inter', -apple-system, sans-serif;
+      height: 100vh; display: flex; overflow: hidden;
       -webkit-font-smoothing: antialiased;
+      background: #F4F6F9; color: #1A2033;
     }
 
     /* ── Sidebar (dark navy) ─────────────────────────────── */
     #sidebar {
-      width: 220px; min-width: 220px;
+      width: 200px; min-width: 200px;
       background: #0B0F1E;
       display: flex; flex-direction: column;
     }
-
-    #sidebar-header {
-      padding: 22px 20px;
-      border-bottom: 1px solid rgba(255,255,255,.07);
-    }
-
-    .logo-row {
-      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
-    }
-
-    .brand-name {
-      font-size: 14px; font-weight: 700; color: #FFFFFF; letter-spacing: -0.2px;
-    }
-    .brand-sub {
-      font-size: 11px; color: #3D4B6E; margin-top: 2px;
-    }
-
-    .org-badge {
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(255,255,255,.05);
-      border: 1px solid rgba(255,255,255,.08);
-      border-radius: 8px; padding: 8px 12px;
-    }
-    .org-badge-dot {
-      width: 6px; height: 6px; border-radius: 50%;
-      background: #CB1C42; flex-shrink: 0;
-      box-shadow: 0 0 6px rgba(203,28,66,.5);
-    }
-    .org-badge-name {
-      font-size: 12px; font-weight: 600; color: #C8D0E8;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-
-    .sidebar-spacer { flex: 1; }
-
-    .sidebar-footer {
-      padding: 16px 20px;
-      border-top: 1px solid rgba(255,255,255,.06);
-    }
-    .logout-link {
+    #sidebar-header { padding: 20px 18px; border-bottom: 1px solid rgba(255,255,255,.07); }
+    .logo-row { display: flex; align-items: center; gap: 10px; margin-bottom: 12px; }
+    .brand-name { font-size: 13px; font-weight: 700; color: #fff; letter-spacing: -.2px; }
+    .brand-sub  { font-size: 11px; color: #3D4B6E; margin-top: 1px; }
+    .org-badge  {
       display: flex; align-items: center; gap: 7px;
-      font-size: 12px; color: #3D4B6E; text-decoration: none;
-      transition: color .15s; font-weight: 500;
+      background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.08);
+      border-radius: 7px; padding: 7px 10px;
+    }
+    .org-dot {
+      width: 6px; height: 6px; border-radius: 50%; flex-shrink: 0;
+      background: #CB1C42; box-shadow: 0 0 6px rgba(203,28,66,.5);
+    }
+    .org-name { font-size: 11px; font-weight: 600; color: #C8D0E8; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .sidebar-spacer { flex: 1; }
+    .sidebar-footer { padding: 14px 18px; border-top: 1px solid rgba(255,255,255,.06); }
+    .logout-link {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; color: #3D4B6E; text-decoration: none;
+      font-weight: 500; transition: color .15s;
     }
     .logout-link:hover { color: #CB1C42; }
 
-    /* ── Main (blanc/clair) ──────────────────────────────── */
-    #main { flex: 1; overflow-y: auto; background: #F4F6F9; padding: 36px 40px; }
-
-    #main-header {
+    /* ── App panel ───────────────────────────────────────── */
+    #app-panel {
+      width: 260px; min-width: 260px;
+      background: #fff;
+      border-right: 1px solid #E8ECF2;
+      display: flex; flex-direction: column;
+    }
+    #app-panel-header {
+      padding: 20px 18px 14px;
+      border-bottom: 1px solid #F0F3F7;
       display: flex; align-items: center; justify-content: space-between;
-      margin-bottom: 28px;
     }
-    #main-header h2 {
-      font-size: 22px; font-weight: 700; color: #0B0F1E; letter-spacing: -0.5px;
-    }
-    .app-count {
-      font-size: 12px; font-weight: 600; color: #64748B;
-      background: #FFFFFF; border: 1px solid #E2E8F0;
-      padding: 3px 10px; border-radius: 20px;
-    }
+    #app-panel-header h3 { font-size: 13px; font-weight: 700; color: #0B0F1E; }
+    .app-total { font-size: 11px; color: #94A3B8; font-weight: 500; }
+    #app-list { flex: 1; overflow-y: auto; padding: 8px; }
 
-    /* ── App grid ────────────────────────────────────────── */
-    #apps-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-      gap: 16px;
+    .app-item {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 12px; border-radius: 9px;
+      cursor: pointer; transition: background .15s;
+      margin-bottom: 2px;
     }
-
-    /* ── App card ────────────────────────────────────────── */
-    .app-card {
-      background: #FFFFFF;
+    .app-item:hover { background: #F4F6F9; }
+    .app-item.active { background: #FFF0F3; }
+    .app-item-name {
+      font-size: 13px; font-weight: 500; color: #334155;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+      flex: 1; min-width: 0;
+    }
+    .app-item.active .app-item-name { color: #CB1C42; font-weight: 600; }
+    .app-sched-badge {
+      flex-shrink: 0; margin-left: 8px;
+      font-size: 10px; font-weight: 700;
+      background: #F4F6F9; color: #94A3B8;
+      padding: 2px 7px; border-radius: 10px;
       border: 1px solid #E8ECF2;
-      border-radius: 14px; padding: 20px;
+    }
+    .app-item.active .app-sched-badge { background: rgba(203,28,66,.08); color: #CB1C42; border-color: rgba(203,28,66,.15); }
+
+    /* ── Schedule panel ──────────────────────────────────── */
+    #sched-panel { flex: 1; overflow-y: auto; background: #F4F6F9; display: flex; flex-direction: column; }
+    #sched-header {
+      background: #fff; border-bottom: 1px solid #E8ECF2;
+      padding: 18px 28px;
+      display: flex; align-items: center; justify-content: space-between;
+      min-height: 65px;
+    }
+    #sched-header h2 { font-size: 18px; font-weight: 700; color: #0B0F1E; letter-spacing: -.4px; }
+    #sched-header .app-id-small { font-size: 10px; color: #B0BDD0; font-family: monospace; margin-top: 2px; }
+    #sched-body { padding: 24px 28px; flex: 1; }
+
+    /* ── Schedule rows ───────────────────────────────────── */
+    .sched-row-card {
+      background: #fff; border: 1px solid #E8ECF2;
+      border-radius: 12px; padding: 16px 18px;
+      margin-bottom: 12px;
       transition: border-color .2s, box-shadow .2s;
     }
-    .app-card:hover {
-      border-color: rgba(203,28,66,.2);
-      box-shadow: 0 4px 20px rgba(203,28,66,.07);
-    }
-
-    .app-card-header {
-      display: flex; align-items: flex-start;
-      justify-content: space-between; margin-bottom: 14px;
-    }
-    .app-card-title { flex: 1; min-width: 0; }
-    .app-card-title h3 {
-      font-size: 13px; font-weight: 600; color: #0B0F1E;
-      display: flex; align-items: center; gap: 8px;
-      white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-    }
-    .app-id {
-      font-size: 10px; color: #B0BDD0;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      margin-top: 4px;
-    }
-
-    .dot { width: 7px; height: 7px; min-width: 7px; border-radius: 50%; }
-    .dot-on  { background: #CB1C42; box-shadow: 0 0 6px rgba(203,28,66,.45); }
-    .dot-off { background: #D0D8E8; }
-
-    /* ── Schedule block ──────────────────────────────────── */
-    .sched-block {
-      background: #F8FAFC;
-      border: 1px solid #EEF1F6;
-      border-radius: 10px; padding: 12px 14px; margin-bottom: 8px;
-    }
-    .sched-row {
+    .sched-row-card:hover { border-color: rgba(203,28,66,.18); box-shadow: 0 2px 12px rgba(203,28,66,.05); }
+    .sched-row-top {
       display: flex; align-items: center; justify-content: space-between;
-      font-size: 12px; margin-bottom: 7px;
+      margin-bottom: 12px;
     }
-    .sched-row:last-child { margin-bottom: 0; }
-    .sched-label { color: #94A3B8; font-size: 11px; font-weight: 500; min-width: 44px; }
+    .sched-row-name { font-size: 13px; font-weight: 600; color: #1A2033; }
+    .sched-row-name.unnamed { color: #94A3B8; font-weight: 400; font-style: italic; }
+    .sched-row-actions { display: flex; align-items: center; gap: 6px; }
 
-    .cron-tag {
-      background: rgba(203,28,66,.07);
-      color: #CB1C42;
-      padding: 2px 8px; border-radius: 5px;
-      font-family: 'SF Mono', 'Fira Code', monospace;
-      font-size: 11px; font-weight: 600;
-      border: 1px solid rgba(203,28,66,.12);
+    .sched-times { display: flex; flex-direction: column; gap: 6px; }
+    .sched-time-line {
+      display: flex; align-items: center; gap: 10px; font-size: 12px;
     }
-    .tz-tag { color: #94A3B8; font-size: 11px; }
+    .sched-time-icon {
+      width: 22px; height: 22px; border-radius: 6px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; flex-shrink: 0;
+    }
+    .icon-stop  { background: #FFF0F0; color: #DC2626; }
+    .icon-start { background: #F0FDF4; color: #16A34A; }
+    .sched-time-val { font-size: 15px; font-weight: 700; color: #0B0F1E; min-width: 46px; }
+    .sched-time-days { color: #64748B; font-size: 12px; }
+    .sched-time-tz { color: #B0BDD0; font-size: 11px; margin-top: 4px; margin-left: 32px; }
 
     /* ── Toggle ──────────────────────────────────────────── */
-    .sw { position: relative; display: inline-flex; align-items: center; cursor: pointer; gap: 8px; }
+    .sw { position: relative; display: inline-flex; align-items: center; cursor: pointer; gap: 7px; }
     .sw input { opacity: 0; width: 0; height: 0; position: absolute; }
     .sw-track {
-      width: 28px; height: 16px;
-      background: #D0D8E8; border-radius: 8px;
-      transition: background .2s; position: relative;
+      width: 28px; height: 16px; background: #D0D8E8;
+      border-radius: 8px; transition: background .2s; position: relative;
     }
     .sw input:checked ~ .sw-track { background: #CB1C42; }
     .sw-thumb {
       position: absolute; top: 2px; left: 2px;
-      width: 12px; height: 12px;
-      background: white; border-radius: 50%; transition: left .2s;
-      box-shadow: 0 1px 3px rgba(0,0,0,.2);
+      width: 12px; height: 12px; background: white; border-radius: 50%;
+      transition: left .2s; box-shadow: 0 1px 3px rgba(0,0,0,.2);
     }
     .sw input:checked ~ .sw-track .sw-thumb { left: 14px; }
-    .sw-label { font-size: 11px; color: #94A3B8; font-weight: 500; }
+    .sw-lbl { font-size: 11px; color: #94A3B8; font-weight: 500; }
 
     /* ── Buttons ─────────────────────────────────────────── */
     .btn {
       display: inline-flex; align-items: center; gap: 5px;
-      padding: 5px 12px; border-radius: 7px; border: none;
+      padding: 6px 14px; border-radius: 8px; border: none;
       cursor: pointer; font-size: 12px; font-weight: 600;
       font-family: inherit; transition: all .15s; white-space: nowrap;
     }
     .btn-primary { background: #CB1C42; color: #fff; }
-    .btn-primary:hover { background: #E01E4A; box-shadow: 0 2px 12px rgba(203,28,66,.35); }
-    .btn-green  { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; }
-    .btn-green:hover  { background: #DCFCE7; }
-    .btn-red    { background: #FFF5F5; color: #DC2626; border: 1px solid #FECACA; }
-    .btn-red:hover    { background: #FEE2E2; }
-    .btn-ghost  { background: #FFFFFF; color: #64748B; border: 1px solid #E2E8F0; }
-    .btn-ghost:hover  { background: #F8FAFC; color: #334155; border-color: #CBD5E1; }
-    .btn-icon   { padding: 5px 9px; }
-    .btn-add {
-      background: transparent; color: #B0BDD0;
-      border: 1px dashed #D8E0EC;
-      width: 100%; justify-content: center; padding: 9px; margin-top: 4px;
-      border-radius: 8px; font-size: 12px;
-    }
-    .btn-add:hover {
-      background: rgba(203,28,66,.04);
-      border-color: rgba(203,28,66,.3);
-      color: #CB1C42; border-style: solid;
-    }
+    .btn-primary:hover { background: #E01E4A; box-shadow: 0 2px 10px rgba(203,28,66,.35); }
+    .btn-ghost { background: #fff; color: #64748B; border: 1px solid #E2E8F0; }
+    .btn-ghost:hover { background: #F8FAFC; border-color: #CBD5E1; color: #334155; }
+    .btn-icon-red { background: #FFF5F5; color: #DC2626; border: 1px solid #FECACA; padding: 5px 8px; border-radius: 7px; cursor: pointer; font-size: 13px; transition: background .15s; }
+    .btn-icon-red:hover { background: #FEE2E2; }
+    .btn-icon-gray { background: #F8FAFC; color: #64748B; border: 1px solid #E2E8F0; padding: 5px 8px; border-radius: 7px; cursor: pointer; font-size: 13px; transition: background .15s; }
+    .btn-icon-gray:hover { background: #F1F5F9; }
+    .btn-icon-green { background: #F0FDF4; color: #16A34A; border: 1px solid #BBF7D0; padding: 5px 8px; border-radius: 7px; cursor: pointer; font-size: 13px; }
+    .btn-icon-green:hover { background: #DCFCE7; }
 
-    /* ── States ──────────────────────────────────────────── */
+    .btn-add-sched {
+      width: 100%; background: transparent; border: 1px dashed #D8E0EC;
+      color: #94A3B8; padding: 11px; border-radius: 10px;
+      font-size: 13px; font-weight: 500; cursor: pointer; font-family: inherit;
+      transition: all .15s;
+    }
+    .btn-add-sched:hover { border-color: rgba(203,28,66,.3); color: #CB1C42; border-style: solid; background: rgba(203,28,66,.03); }
+
+    /* ── Empty / loading states ──────────────────────────── */
     .state-center {
-      display: flex; flex-direction: column; align-items: center; justify-content: center;
-      height: calc(100vh - 140px); text-align: center;
+      flex: 1; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; text-align: center; padding: 40px;
     }
-    .state-center p { font-size: 14px; margin-top: 14px; font-weight: 500; color: #94A3B8; }
-
-    .loader-inline {
-      display: inline-block; width: 14px; height: 14px;
-      border: 2px solid #E2E8F0; border-top-color: #CB1C42;
-      border-radius: 50%; animation: spin .7s linear infinite;
-    }
+    .state-center p { color: #94A3B8; font-size: 13px; margin-top: 12px; font-weight: 500; }
+    .loader { width: 22px; height: 22px; border: 2px solid #E2E8F0; border-top-color: #CB1C42; border-radius: 50%; animation: spin .7s linear infinite; }
+    .loader-sm { display: inline-block; width: 12px; height: 12px; border: 2px solid #E2E8F0; border-top-color: #CB1C42; border-radius: 50%; animation: spin .7s linear infinite; }
     @keyframes spin { to { transform: rotate(360deg); } }
 
     /* ── Modal ───────────────────────────────────────────── */
     #overlay {
       display: none; position: fixed; inset: 0;
-      background: rgba(11,15,30,.55);
-      backdrop-filter: blur(4px);
+      background: rgba(11,15,30,.5); backdrop-filter: blur(4px);
       z-index: 50; align-items: center; justify-content: center;
     }
     #overlay.open { display: flex; }
     #modal {
-      background: #FFFFFF;
-      border: 1px solid #E2E8F0;
-      border-radius: 16px; padding: 28px;
-      width: 460px; max-width: 96vw; max-height: 92vh; overflow-y: auto;
+      background: #fff; border: 1px solid #E2E8F0; border-radius: 16px;
+      padding: 28px; width: 480px; max-width: 96vw; max-height: 92vh; overflow-y: auto;
       box-shadow: 0 20px 60px rgba(11,15,30,.15);
     }
-    #modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 22px; color: #0B0F1E; }
+    #modal h3 { font-size: 15px; font-weight: 700; color: #0B0F1E; margin-bottom: 20px; }
 
-    .fg { margin-bottom: 14px; }
-    .fg label:not(.sw) {
+    .fg { margin-bottom: 16px; }
+    .fg-lbl {
       display: block; font-size: 10px; font-weight: 600;
       color: #94A3B8; margin-bottom: 6px;
-      text-transform: uppercase; letter-spacing: 0.8px;
+      text-transform: uppercase; letter-spacing: .8px;
     }
-    .fg input, .fg select {
-      width: 100%; background: #F8FAFC;
-      border: 1px solid #E2E8F0;
+    .fg input[type=text], .fg select {
+      width: 100%; background: #F8FAFC; border: 1px solid #E2E8F0;
       color: #0B0F1E; padding: 9px 12px; border-radius: 8px;
-      font-size: 13px; font-family: inherit; outline: none;
-      transition: border .15s;
+      font-size: 13px; font-family: inherit; outline: none; transition: border .15s;
     }
-    .fg input:focus, .fg select:focus {
-      border-color: #CB1C42;
-      box-shadow: 0 0 0 3px rgba(203,28,66,.08);
-      background: #FFFFFF;
+    .fg input[type=text]:focus, .fg select:focus {
+      border-color: #CB1C42; box-shadow: 0 0 0 3px rgba(203,28,66,.08); background: #fff;
     }
-    .fg input:disabled { opacity: 1; cursor: default; background: #F1F5F9; color: #334155; font-weight: 500; }
-    .fg-hint { font-size: 10px; color: #B0BDD0; margin-top: 5px; }
-    .fg-row { display: flex; gap: 12px; }
-    .fg-row .fg { flex: 1; }
+    .fg input:disabled { opacity: 1; background: #F1F5F9; color: #334155; font-weight: 500; cursor: default; }
 
+    /* Time section */
+    .time-section {
+      background: #F8FAFC; border: 1px solid #E8ECF2;
+      border-radius: 10px; padding: 14px 16px; margin-bottom: 12px;
+    }
+    .time-section-header {
+      display: flex; align-items: center; justify-content: space-between;
+      margin-bottom: 12px;
+    }
+    .time-section-title {
+      display: flex; align-items: center; gap: 8px;
+      font-size: 12px; font-weight: 600; color: #334155;
+    }
+    .time-icon-sm {
+      width: 20px; height: 20px; border-radius: 5px;
+      display: flex; align-items: center; justify-content: center; font-size: 11px;
+    }
+    .time-picker-row {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap;
+    }
+    .time-picker-row.disabled { opacity: .35; pointer-events: none; }
+    .time-sel {
+      background: #fff; border: 1px solid #E2E8F0; border-radius: 7px;
+      color: #0B0F1E; font-size: 18px; font-weight: 700; font-family: inherit;
+      padding: 6px 8px; outline: none; cursor: pointer; transition: border .15s;
+      appearance: none; text-align: center;
+    }
+    .time-sel:focus { border-color: #CB1C42; box-shadow: 0 0 0 3px rgba(203,28,66,.08); }
+    .time-colon { font-size: 20px; font-weight: 700; color: #334155; margin: 0 -2px; }
+    .day-pills { display: flex; gap: 4px; flex-wrap: wrap; margin-top: 10px; }
+    .day-pill {
+      padding: 4px 9px; border-radius: 6px; border: 1px solid #E2E8F0;
+      background: #fff; color: #94A3B8; cursor: pointer;
+      font-size: 11px; font-weight: 600; font-family: inherit;
+      transition: all .12s; user-select: none;
+    }
+    .day-pill.on { background: #CB1C42; color: #fff; border-color: #CB1C42; }
     .modal-footer {
       display: flex; justify-content: flex-end; gap: 8px;
       margin-top: 20px; border-top: 1px solid #F1F5F9; padding-top: 18px;
     }
+    .fg-row { display: flex; gap: 12px; }
+    .fg-row .fg { flex: 1; }
 
     /* ── Toast ───────────────────────────────────────────── */
     #toast {
       position: fixed; bottom: 24px; right: 24px;
-      padding: 11px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
+      padding: 10px 18px; border-radius: 10px; font-size: 13px; font-weight: 500;
       transform: translateY(80px); transition: transform .3s cubic-bezier(.34,1.56,.64,1);
       z-index: 100; pointer-events: none;
     }
@@ -267,16 +265,16 @@
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-track { background: transparent; }
     ::-webkit-scrollbar-thumb { background: #D0D8E8; border-radius: 2px; }
-
-    select option { background: #FFFFFF; color: #0B0F1E; }
+    select option { background: #fff; color: #0B0F1E; }
   </style>
 </head>
 <body>
 
+<!-- ── Sidebar ──────────────────────────────────────────── -->
 <div id="sidebar">
   <div id="sidebar-header">
     <div class="logo-row">
-      <svg width="30" height="30" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg">
+      <svg width="28" height="28" viewBox="0 0 100 116" xmlns="http://www.w3.org/2000/svg">
         <polygon points="50,2  7,29  33,62  50,38"  fill="#F2926B"/>
         <polygon points="50,2  50,38 93,29"         fill="#E55C3A"/>
         <polygon points="7,29  7,87  33,62"         fill="#CC3A28"/>
@@ -295,16 +293,14 @@
       </div>
     </div>
     <div class="org-badge">
-      <span class="org-badge-dot"></span>
-      <span class="org-badge-name" id="sidebar-org-name">Chargement…</span>
+      <span class="org-dot"></span>
+      <span class="org-name" id="sidebar-org-name">Chargement…</span>
     </div>
   </div>
-
   <div class="sidebar-spacer"></div>
-
   <div class="sidebar-footer">
     <a href="/auth/logout" class="logout-link">
-      <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+      <svg width="13" height="13" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
         <path stroke-linecap="round" stroke-linejoin="round" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a2 2 0 01-2 2H5a2 2 0 01-2-2V7a2 2 0 012-2h6a2 2 0 012 2v1"/>
       </svg>
       Déconnexion
@@ -312,16 +308,39 @@
   </div>
 </div>
 
-<div id="main">
-  <div id="content">
-    <div class="state-center">
-      <span class="loader-inline" style="width:24px;height:24px;border-width:3px"></span>
-      <p>Chargement…</p>
+<!-- ── App panel ─────────────────────────────────────────── -->
+<div id="app-panel">
+  <div id="app-panel-header">
+    <h3>Applications</h3>
+    <span class="app-total" id="app-total"></span>
+  </div>
+  <div id="app-list">
+    <div style="padding:20px;display:flex;align-items:center;gap:8px;color:#94A3B8;font-size:12px">
+      <span class="loader-sm"></span> Chargement…
     </div>
   </div>
 </div>
 
-<!-- Modal -->
+<!-- ── Schedule panel ────────────────────────────────────── -->
+<div id="sched-panel">
+  <div id="sched-header" style="display:none">
+    <div>
+      <h2 id="sched-app-name"></h2>
+      <div class="app-id-small" id="sched-app-id"></div>
+    </div>
+    <button class="btn btn-primary" onclick="openModal()">+ Nouvelle plage</button>
+  </div>
+  <div id="sched-body">
+    <div class="state-center" style="height:100vh">
+      <svg width="40" height="40" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" style="color:#D0D8E8">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/>
+      </svg>
+      <p>Sélectionne une application</p>
+    </div>
+  </div>
+</div>
+
+<!-- ── Modal ──────────────────────────────────────────────── -->
 <div id="overlay">
   <div id="modal">
     <h3 id="modal-title">Nouvelle plage horaire</h3>
@@ -330,26 +349,59 @@
       <input type="hidden" id="f-org">
       <input type="hidden" id="f-app">
       <div class="fg">
-        <label>Application</label>
+        <label class="fg-lbl">Application</label>
         <input type="text" id="f-appname" disabled>
       </div>
       <div class="fg">
-        <label>Nom <span style="color:#B0BDD0;text-transform:none;letter-spacing:0;font-weight:400">(optionnel)</span></label>
+        <label class="fg-lbl">Nom <span style="color:#B0BDD0;text-transform:none;font-weight:400">(optionnel)</span></label>
         <input type="text" id="f-name" placeholder="ex: Nuit semaine, Week-end…">
       </div>
-      <div class="fg-row">
-        <div class="fg">
-          <label>Heure d'extinction</label>
-          <input type="text" id="f-stop" placeholder="0 20 * * 1-5">
+
+      <!-- Extinction -->
+      <div class="time-section">
+        <div class="time-section-header">
+          <div class="time-section-title">
+            <span class="time-icon-sm icon-stop">🔴</span>
+            Heure d'extinction
+          </div>
+          <label class="sw">
+            <input type="checkbox" id="f-stop-on" onchange="toggleTimePicker('stop')">
+            <span class="sw-track"><span class="sw-thumb"></span></span>
+            <span class="sw-lbl">Activer</span>
+          </label>
         </div>
-        <div class="fg">
-          <label>Heure de démarrage</label>
-          <input type="text" id="f-start" placeholder="0 8 * * 1-5">
+        <div class="time-picker-row disabled" id="stop-picker">
+          <select class="time-sel" id="f-stop-h" style="width:64px"></select>
+          <span class="time-colon">:</span>
+          <select class="time-sel" id="f-stop-m" style="width:64px"></select>
+          <div class="day-pills" id="stop-days"></div>
         </div>
       </div>
+
+      <!-- Démarrage -->
+      <div class="time-section">
+        <div class="time-section-header">
+          <div class="time-section-title">
+            <span class="time-icon-sm icon-start">🟢</span>
+            Heure de démarrage
+          </div>
+          <label class="sw">
+            <input type="checkbox" id="f-start-on" onchange="toggleTimePicker('start')">
+            <span class="sw-track"><span class="sw-thumb"></span></span>
+            <span class="sw-lbl">Activer</span>
+          </label>
+        </div>
+        <div class="time-picker-row disabled" id="start-picker">
+          <select class="time-sel" id="f-start-h" style="width:64px"></select>
+          <span class="time-colon">:</span>
+          <select class="time-sel" id="f-start-m" style="width:64px"></select>
+          <div class="day-pills" id="start-days"></div>
+        </div>
+      </div>
+
       <div class="fg-row">
         <div class="fg">
-          <label>Fuseau horaire</label>
+          <label class="fg-lbl">Fuseau horaire</label>
           <select id="f-tz">
             <option value="Europe/Paris">Europe/Paris</option>
             <option value="UTC">UTC</option>
@@ -366,15 +418,11 @@
           <label class="sw" style="cursor:pointer">
             <input type="checkbox" id="f-enabled" checked>
             <span class="sw-track"><span class="sw-thumb"></span></span>
-            <span class="sw-label" style="font-size:13px;color:#334155">Actif</span>
+            <span class="sw-lbl" style="font-size:13px;color:#334155">Plage active</span>
           </label>
         </div>
       </div>
-      <div class="fg-hint" style="margin-bottom:12px">
-        Format cron : <code style="color:#CB1C42;font-family:monospace">minute heure * * jours</code>
-        — ex: <code style="color:#CB1C42;font-family:monospace">0 20 * * 1-5</code> = lun–ven à 20h.
-        Laisser vide pour ne pas planifier.
-      </div>
+
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Annuler</button>
         <button type="submit" class="btn btn-primary">Enregistrer</button>
@@ -386,13 +434,93 @@
 <div id="toast"></div>
 
 <script>
+  // ── Constants ──────────────────────────────────────────
+  const DAYS_FR = [
+    {v:1,l:'Lun'},{v:2,l:'Mar'},{v:3,l:'Mer'},
+    {v:4,l:'Jeu'},{v:5,l:'Ven'},{v:6,l:'Sam'},{v:0,l:'Dim'}
+  ];
+
+  // ── Init selects + day pills ───────────────────────────
+  function buildSelects() {
+    ['stop','start'].forEach(t => {
+      const hSel = document.getElementById(`f-${t}-h`);
+      const mSel = document.getElementById(`f-${t}-m`);
+      for (let h = 0; h < 24; h++) {
+        const o = document.createElement('option');
+        o.value = h; o.textContent = String(h).padStart(2,'0');
+        hSel.appendChild(o);
+      }
+      [0,5,10,15,20,25,30,35,40,45,50,55].forEach(m => {
+        const o = document.createElement('option');
+        o.value = m; o.textContent = String(m).padStart(2,'0');
+        mSel.appendChild(o);
+      });
+      const pills = document.getElementById(`${t}-days`);
+      DAYS_FR.forEach(d => {
+        const btn = document.createElement('button');
+        btn.type = 'button'; btn.className = 'day-pill';
+        btn.dataset.day = d.v; btn.textContent = d.l;
+        btn.onclick = () => btn.classList.toggle('on');
+        pills.appendChild(btn);
+      });
+    });
+  }
+  buildSelects();
+
+  function toggleTimePicker(type) {
+    const enabled = document.getElementById(`f-${type}-on`).checked;
+    document.getElementById(`${type}-picker`).classList.toggle('disabled', !enabled);
+  }
+
+  function getSelectedDays(type) {
+    return [...document.querySelectorAll(`#${type}-days .day-pill.on`)]
+      .map(b => parseInt(b.dataset.day));
+  }
+
+  function setSelectedDays(type, days) {
+    document.querySelectorAll(`#${type}-days .day-pill`).forEach(b => {
+      b.classList.toggle('on', days.includes(parseInt(b.dataset.day)));
+    });
+  }
+
+  function timeToCron(h, m, days) {
+    if (!days.length) return null;
+    const sorted = [...days].sort((a,b) => a-b);
+    return `${m} ${h} * * ${sorted.join(',')}`;
+  }
+
+  function cronToParts(cron) {
+    if (!cron) return null;
+    const p = cron.trim().split(/\s+/);
+    if (p.length < 5) return null;
+    const days = p[4] === '*' ? [0,1,2,3,4,5,6] : p[4].split(',').map(Number);
+    return { h: parseInt(p[1]), m: parseInt(p[0]), days };
+  }
+
+  function formatTime(h, m) {
+    return String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0');
+  }
+
+  function formatDays(days) {
+    if (days.length === 7) return 'Tous les jours';
+    const wk = [1,2,3,4,5], we = [0,6];
+    if (days.length === 5 && wk.every(d => days.includes(d))) return 'Lun–Ven';
+    if (days.length === 2 && we.every(d => days.includes(d))) return 'Sam–Dim';
+    const order = [1,2,3,4,5,6,0];
+    const names = {0:'Dim',1:'Lun',2:'Mar',3:'Mer',4:'Jeu',5:'Ven',6:'Sam'};
+    return [...days].sort((a,b) => order.indexOf(a)-order.indexOf(b)).map(d => names[d]).join(' ');
+  }
+
+  // ── State ───────────────────────────────────────────────
   let currentOrg = null;
-  let schedules = [];
+  let currentApp = null;
+  let allApps    = [];
+  let schedules  = [];
 
   async function req(method, path, body) {
     const r = await fetch(path, {
       method,
-      headers: { 'Content-Type': 'application/json' },
+      headers: {'Content-Type':'application/json'},
       body: body ? JSON.stringify(body) : undefined
     });
     if (r.status === 401) { window.location.href = '/auth/login'; return; }
@@ -401,122 +529,154 @@
     return r.json();
   }
 
-  // Chargement automatique au démarrage
+  // ── Bootstrap ───────────────────────────────────────────
   (async () => {
     try {
       const orgs = await req('GET', '/orgs');
-      if (!Array.isArray(orgs) || orgs.length === 0) throw new Error('Aucune organisation configurée');
+      if (!Array.isArray(orgs) || !orgs.length) throw new Error('Aucune organisation configurée');
       const org = orgs[0];
+      currentOrg = org;
       document.getElementById('sidebar-org-name').textContent = org.name;
-      await loadOrg(org.id, org.name);
+
+      const [apps, scheds] = await Promise.all([
+        req('GET', '/orgs/' + org.id + '/apps'),
+        req('GET', '/schedules')
+      ]);
+      allApps   = Array.isArray(apps)  ? apps  : [];
+      schedules = Array.isArray(scheds) ? scheds : [];
+      renderAppList();
     } catch(e) {
       document.getElementById('sidebar-org-name').textContent = 'Erreur';
-      document.getElementById('content').innerHTML =
-        `<div class="state-center"><p style="color:#DC2626">${esc(e.message)}</p></div>`;
+      document.getElementById('app-list').innerHTML =
+        `<div style="padding:16px;color:#DC2626;font-size:12px">${esc(e.message)}</div>`;
     }
   })();
 
-  async function loadOrg(orgId, orgName) {
-    currentOrg = { id: orgId, name: orgName };
-
-    document.getElementById('content').innerHTML =
-      `<div id="main-header"><h2>${esc(orgName)}</h2></div>` +
-      `<div style="display:flex;align-items:center;gap:10px;color:#94A3B8;font-size:13px"><span class="loader-inline"></span> Chargement…</div>`;
-
-    try {
-      const [apps, scheds] = await Promise.all([
-        req('GET', '/orgs/' + orgId + '/apps'),
-        req('GET', '/schedules')
-      ]);
-      schedules = scheds || [];
-      renderOrg(orgId, orgName, Array.isArray(apps) ? apps : [], schedules);
-    } catch(e) {
-      document.getElementById('content').innerHTML =
-        `<div id="main-header"><h2>${esc(orgName)}</h2></div>` +
-        `<div style="color:#DC2626;font-size:13px">Erreur : ${esc(e.message)}</div>`;
-    }
-  }
-
-  function renderOrg(orgId, orgName, apps, scheds) {
-    const count = apps.length;
-    if (count === 0) {
-      document.getElementById('content').innerHTML =
-        `<div id="main-header"><h2>${esc(orgName)}</h2></div>` +
-        `<div style="color:#94A3B8;padding:48px 0;text-align:center;font-size:14px">Aucune application dans cette organisation</div>`;
+  function renderAppList() {
+    const list = document.getElementById('app-list');
+    document.getElementById('app-total').textContent = allApps.length + ' app' + (allApps.length > 1 ? 's' : '');
+    if (!allApps.length) {
+      list.innerHTML = '<div style="padding:16px;color:#94A3B8;font-size:12px">Aucune application</div>';
       return;
     }
-    const cards = apps.map(app => buildCard(orgId, app, scheds.filter(s => s.app_id === app.id))).join('');
-    document.getElementById('content').innerHTML =
-      `<div id="main-header">
-        <h2>${esc(orgName)}</h2>
-        <span class="app-count">${count} app${count > 1 ? 's' : ''}</span>
-      </div>` +
-      `<div id="apps-grid">${cards}</div>`;
+    list.innerHTML = allApps.map(app => {
+      const count = schedules.filter(s => s.app_id === app.id).length;
+      const name  = app.name || app.id;
+      return `<div class="app-item" id="ai-${app.id}" onclick="selectApp('${esc(app.id)}','${esc(name)}')">
+        <span class="app-item-name">${esc(name)}</span>
+        ${count > 0 ? `<span class="app-sched-badge">${count}</span>` : ''}
+      </div>`;
+    }).join('');
   }
 
-  function buildCard(orgId, app, appScheds) {
-    const name = app.name || app.id;
-    const hasScheds = appScheds.length > 0;
+  function selectApp(appId, appName) {
+    currentApp = { id: appId, name: appName };
+    document.querySelectorAll('.app-item').forEach(el => el.classList.remove('active'));
+    document.getElementById('ai-' + appId)?.classList.add('active');
 
-    const schedHtml = appScheds.map(s => `
-      <div class="sched-block" id="sb-${s.id}">
-        ${s.name ? `<div class="sched-row"><span class="sched-label">Nom</span><span style="font-size:12px;color:#334155;font-weight:500">${esc(s.name)}</span></div>` : ''}
-        ${s.cron_stop  ? `<div class="sched-row"><span class="sched-label">Extinction</span><span class="cron-tag">${esc(s.cron_stop)}</span></div>`  : ''}
-        ${s.cron_start ? `<div class="sched-row"><span class="sched-label">Démarrage</span><span class="cron-tag">${esc(s.cron_start)}</span></div>` : ''}
-        <div class="sched-row">
-          <span class="sched-label">TZ</span>
-          <span class="tz-tag">${esc(s.timezone)}</span>
-        </div>
-        <div class="sched-row" style="margin-top:10px">
-          <label class="sw">
-            <input type="checkbox" ${s.enabled ? 'checked' : ''} onchange="toggleSched('${s.id}',this.checked)">
-            <span class="sw-track"><span class="sw-thumb"></span></span>
-            <span class="sw-label">${s.enabled ? 'Actif' : 'Inactif'}</span>
-          </label>
-          <div style="display:flex;gap:5px">
-            <button class="btn btn-green btn-icon" title="Démarrer maintenant"  onclick="trigger('${s.id}','start')">▶</button>
-            <button class="btn btn-red   btn-icon" title="Éteindre maintenant"  onclick="trigger('${s.id}','stop')">■</button>
-            <button class="btn btn-ghost btn-icon" title="Modifier"             onclick="openModal('${orgId}','${app.id}','${esc(name)}','${s.id}')">✎</button>
-            <button class="btn btn-red   btn-icon" title="Supprimer"            onclick="delSched('${s.id}')">✕</button>
-          </div>
-        </div>
-      </div>
-    `).join('');
-
-    return `
-      <div class="app-card" id="card-${app.id}">
-        <div class="app-card-header">
-          <div class="app-card-title">
-            <h3><span class="dot ${hasScheds ? 'dot-on' : 'dot-off'}"></span>${esc(name)}</h3>
-            <div class="app-id">${app.id}</div>
-          </div>
-        </div>
-        ${schedHtml}
-        <button class="btn btn-add" onclick="openModal('${orgId}','${app.id}','${esc(name)}',null)">
-          + Ajouter une plage horaire
-        </button>
-      </div>
-    `;
+    document.getElementById('sched-header').style.display = 'flex';
+    document.getElementById('sched-app-name').textContent = appName;
+    document.getElementById('sched-app-id').textContent   = appId;
+    renderSchedules();
   }
 
-  function openModal(orgId, appId, appName, schedId) {
+  function renderSchedules() {
+    const appScheds = schedules.filter(s => s.app_id === currentApp.id);
+    const body = document.getElementById('sched-body');
+
+    if (!appScheds.length) {
+      body.innerHTML = `<div class="state-center" style="height:60vh">
+        <svg width="36" height="36" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="1.2" style="color:#D0D8E8">
+          <circle cx="12" cy="12" r="10"/><path stroke-linecap="round" d="M12 6v6l4 2"/>
+        </svg>
+        <p>Aucune plage horaire configurée</p>
+      </div>
+      <div style="padding:0 28px 28px">
+        <button class="btn-add-sched" onclick="openModal()">+ Ajouter une première plage horaire</button>
+      </div>`;
+      return;
+    }
+
+    const rows = appScheds.map(s => {
+      const stop  = cronToParts(s.cron_stop);
+      const start = cronToParts(s.cron_start);
+      const stopLine  = stop  ? `<div class="sched-time-line"><span class="sched-time-icon icon-stop">🔴</span><span class="sched-time-val">${formatTime(stop.h,stop.m)}</span><span class="sched-time-days">${formatDays(stop.days)}</span></div>` : '';
+      const startLine = start ? `<div class="sched-time-line"><span class="sched-time-icon icon-start">🟢</span><span class="sched-time-val">${formatTime(start.h,start.m)}</span><span class="sched-time-days">${formatDays(start.days)}</span></div>` : '';
+      const tzLine = `<div class="sched-time-tz">${esc(s.timezone)}</div>`;
+
+      return `<div class="sched-row-card" id="src-${s.id}">
+        <div class="sched-row-top">
+          <div>
+            <span class="sched-row-name ${s.name ? '' : 'unnamed'}">${s.name ? esc(s.name) : 'Sans nom'}</span>
+          </div>
+          <div class="sched-row-actions">
+            <button class="btn-icon-green" title="Démarrer maintenant" onclick="trigger('${s.id}','start')">▶</button>
+            <button class="btn-icon-red"   title="Éteindre maintenant" onclick="trigger('${s.id}','stop')">■</button>
+            <label class="sw" title="Activer / désactiver">
+              <input type="checkbox" ${s.enabled?'checked':''} onchange="toggleSched('${s.id}',this.checked)">
+              <span class="sw-track"><span class="sw-thumb"></span></span>
+            </label>
+            <button class="btn-icon-gray" title="Modifier" onclick="openModal('${s.id}')">✎</button>
+            <button class="btn-icon-red"  title="Supprimer" onclick="delSched('${s.id}')">✕</button>
+          </div>
+        </div>
+        <div class="sched-times">${stopLine}${startLine}${tzLine}</div>
+      </div>`;
+    }).join('');
+
+    body.innerHTML = `<div style="padding:24px 28px">
+      ${rows}
+      <button class="btn-add-sched" onclick="openModal()">+ Ajouter une plage horaire</button>
+    </div>`;
+  }
+
+  // ── Modal ───────────────────────────────────────────────
+  function openModal(schedId) {
     document.getElementById('f-id').value      = schedId || '';
-    document.getElementById('f-org').value     = orgId;
-    document.getElementById('f-app').value     = appId;
-    document.getElementById('f-appname').value = appName;
+    document.getElementById('f-org').value     = currentOrg.id;
+    document.getElementById('f-app').value     = currentApp.id;
+    document.getElementById('f-appname').value = currentApp.name;
     document.getElementById('modal-title').textContent = schedId ? 'Modifier la plage horaire' : 'Nouvelle plage horaire';
+
+    // Reset pickers
+    ['stop','start'].forEach(t => {
+      document.getElementById(`f-${t}-on`).checked = false;
+      document.getElementById(`f-${t}-h`).value    = t === 'stop' ? 20 : 8;
+      document.getElementById(`f-${t}-m`).value    = 0;
+      setSelectedDays(t, [1,2,3,4,5]); // Lun–Ven default
+      document.getElementById(`${t}-picker`).classList.add('disabled');
+    });
+    document.getElementById('f-name').value = '';
+    document.getElementById('f-tz').value   = 'Europe/Paris';
+    document.getElementById('f-enabled').checked = true;
 
     if (schedId) {
       const s = schedules.find(s => s.id === schedId);
-      document.getElementById('f-name').value      = s?.name || '';
-      document.getElementById('f-stop').value      = s?.cron_stop || '';
-      document.getElementById('f-start').value     = s?.cron_start || '';
-      document.getElementById('f-tz').value        = s?.timezone || 'Europe/Paris';
-      document.getElementById('f-enabled').checked = s?.enabled ?? true;
-    } else {
-      document.getElementById('sched-form').reset();
-      document.getElementById('f-enabled').checked = true;
-      document.getElementById('f-tz').value = 'Europe/Paris';
+      if (!s) return;
+      document.getElementById('f-name').value    = s.name || '';
+      document.getElementById('f-tz').value      = s.timezone || 'Europe/Paris';
+      document.getElementById('f-enabled').checked = s.enabled;
+
+      if (s.cron_stop) {
+        const p = cronToParts(s.cron_stop);
+        if (p) {
+          document.getElementById('f-stop-on').checked = true;
+          document.getElementById('f-stop-h').value    = p.h;
+          document.getElementById('f-stop-m').value    = p.m;
+          setSelectedDays('stop', p.days);
+          document.getElementById('stop-picker').classList.remove('disabled');
+        }
+      }
+      if (s.cron_start) {
+        const p = cronToParts(s.cron_start);
+        if (p) {
+          document.getElementById('f-start-on').checked = true;
+          document.getElementById('f-start-h').value    = p.h;
+          document.getElementById('f-start-m').value    = p.m;
+          setSelectedDays('start', p.days);
+          document.getElementById('start-picker').classList.remove('disabled');
+        }
+      }
     }
     document.getElementById('overlay').classList.add('open');
   }
@@ -529,48 +689,56 @@
   document.getElementById('sched-form').addEventListener('submit', async e => {
     e.preventDefault();
     const schedId = document.getElementById('f-id').value;
-    const isEdit  = !!schedId;
 
-    const base = {
+    const stopOn  = document.getElementById('f-stop-on').checked;
+    const startOn = document.getElementById('f-start-on').checked;
+    const cronStop  = stopOn  ? timeToCron(+document.getElementById('f-stop-h').value,  +document.getElementById('f-stop-m').value,  getSelectedDays('stop'))  : null;
+    const cronStart = startOn ? timeToCron(+document.getElementById('f-start-h').value, +document.getElementById('f-start-m').value, getSelectedDays('start')) : null;
+
+    if (stopOn && !cronStop)  { toast('Sélectionne au moins un jour pour l\'extinction', true); return; }
+    if (startOn && !cronStart){ toast('Sélectionne au moins un jour pour le démarrage', true);  return; }
+
+    const payload = {
       timezone: document.getElementById('f-tz').value,
       enabled:  document.getElementById('f-enabled').checked,
+      cron_stop:  cronStop  || null,
+      cron_start: cronStart || null,
     };
-    const name  = document.getElementById('f-name').value.trim();
-    const stop  = document.getElementById('f-stop').value.trim();
-    const start = document.getElementById('f-start').value.trim();
-    if (name)  base.name       = name;
-    if (stop)  base.cron_stop  = stop;
-    if (start) base.cron_start = start;
-
-    if (!isEdit) {
-      base.org_id = document.getElementById('f-org').value;
-      base.app_id = document.getElementById('f-app').value;
+    const name = document.getElementById('f-name').value.trim();
+    if (name) payload.name = name;
+    if (!schedId) {
+      payload.org_id = document.getElementById('f-org').value;
+      payload.app_id = document.getElementById('f-app').value;
     }
 
     try {
-      if (isEdit) { await req('PUT',  '/schedules/' + schedId, base); }
-      else        { await req('POST', '/schedules', base); }
+      if (schedId) { await req('PUT',  '/schedules/' + schedId, payload); }
+      else         { await req('POST', '/schedules', payload); }
       closeModal();
       toast('Plage horaire enregistrée ✓');
-      loadOrg(currentOrg.id, currentOrg.name);
+      await refreshSchedules();
     } catch(e) { toast(e.message, true); }
   });
+
+  async function refreshSchedules() {
+    schedules = await req('GET', '/schedules') || [];
+    renderAppList();
+    if (currentApp) renderSchedules();
+  }
 
   async function toggleSched(id, enabled) {
     try {
       await req('PUT', '/schedules/' + id, { enabled });
       const s = schedules.find(s => s.id === id);
       if (s) s.enabled = enabled;
-      const lbl = document.querySelector(`#sb-${id} .sw-label`);
-      if (lbl) lbl.textContent = enabled ? 'Actif' : 'Inactif';
-      toast(enabled ? 'Activé' : 'Désactivé');
+      toast(enabled ? 'Activée' : 'Désactivée');
     } catch(e) { toast(e.message, true); }
   }
 
   async function trigger(id, action) {
     try {
       await req('POST', '/schedules/' + id + '/trigger/' + action);
-      toast(`Action "${action}" déclenchée ✓`);
+      toast(`Action "${action === 'start' ? 'démarrage' : 'extinction'}" déclenchée ✓`);
     } catch(e) { toast(e.message, true); }
   }
 
@@ -578,20 +746,19 @@
     if (!confirm('Supprimer cette plage horaire ?')) return;
     try {
       await req('DELETE', '/schedules/' + id);
-      toast('Plage horaire supprimée');
-      loadOrg(currentOrg.id, currentOrg.name);
+      toast('Plage supprimée');
+      await refreshSchedules();
     } catch(e) { toast(e.message, true); }
   }
 
   function esc(s) {
-    return String(s || '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+    return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;');
   }
 
   let toastT;
   function toast(msg, isErr) {
     const el = document.getElementById('toast');
-    el.textContent = msg;
-    el.className = isErr ? 'err' : 'ok';
+    el.textContent = msg; el.className = isErr ? 'err' : 'ok';
     clearTimeout(toastT);
     toastT = setTimeout(() => el.className = '', 3200);
   }

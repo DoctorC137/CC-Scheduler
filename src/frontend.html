@@ -324,7 +324,7 @@
 <!-- Modal -->
 <div id="overlay">
   <div id="modal">
-    <h3 id="modal-title">Configurer un schedule</h3>
+    <h3 id="modal-title">Nouvelle plage horaire</h3>
     <form id="sched-form" autocomplete="off">
       <input type="hidden" id="f-id">
       <input type="hidden" id="f-org">
@@ -334,17 +334,16 @@
         <input type="text" id="f-appname" disabled>
       </div>
       <div class="fg">
-        <label>Nom du schedule <span style="color:#B0BDD0;text-transform:none;letter-spacing:0">(optionnel)</span></label>
-        <input type="text" id="f-name" placeholder="ex: Nuit semaine">
+        <label>Nom <span style="color:#B0BDD0;text-transform:none;letter-spacing:0;font-weight:400">(optionnel)</span></label>
+        <input type="text" id="f-name" placeholder="ex: Nuit semaine, Week-end…">
       </div>
       <div class="fg-row">
         <div class="fg">
-          <label>Stop — cron</label>
+          <label>Heure d'extinction</label>
           <input type="text" id="f-stop" placeholder="0 20 * * 1-5">
-          <div class="fg-hint">Laisser vide pour désactiver</div>
         </div>
         <div class="fg">
-          <label>Start — cron</label>
+          <label>Heure de démarrage</label>
           <input type="text" id="f-start" placeholder="0 8 * * 1-5">
         </div>
       </div>
@@ -371,9 +370,10 @@
           </label>
         </div>
       </div>
-      <div class="fg-hint" style="margin-top:-8px;margin-bottom:12px">
-        Format : <code style="color:#CB1C42;font-family:monospace">minute heure * * jours</code>
-        — ex: <code style="color:#CB1C42;font-family:monospace">0 20 * * 1-5</code> = lun–ven à 20h
+      <div class="fg-hint" style="margin-bottom:12px">
+        Format cron : <code style="color:#CB1C42;font-family:monospace">minute heure * * jours</code>
+        — ex: <code style="color:#CB1C42;font-family:monospace">0 20 * * 1-5</code> = lun–ven à 20h.
+        Laisser vide pour ne pas planifier.
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-ghost" onclick="closeModal()">Annuler</button>
@@ -461,8 +461,8 @@
     const schedHtml = appScheds.map(s => `
       <div class="sched-block" id="sb-${s.id}">
         ${s.name ? `<div class="sched-row"><span class="sched-label">Nom</span><span style="font-size:12px;color:#334155;font-weight:500">${esc(s.name)}</span></div>` : ''}
-        ${s.cron_stop  ? `<div class="sched-row"><span class="sched-label">Stop</span><span class="cron-tag">${esc(s.cron_stop)}</span></div>`  : ''}
-        ${s.cron_start ? `<div class="sched-row"><span class="sched-label">Start</span><span class="cron-tag">${esc(s.cron_start)}</span></div>` : ''}
+        ${s.cron_stop  ? `<div class="sched-row"><span class="sched-label">Extinction</span><span class="cron-tag">${esc(s.cron_stop)}</span></div>`  : ''}
+        ${s.cron_start ? `<div class="sched-row"><span class="sched-label">Démarrage</span><span class="cron-tag">${esc(s.cron_start)}</span></div>` : ''}
         <div class="sched-row">
           <span class="sched-label">TZ</span>
           <span class="tz-tag">${esc(s.timezone)}</span>
@@ -493,7 +493,7 @@
         </div>
         ${schedHtml}
         <button class="btn btn-add" onclick="openModal('${orgId}','${app.id}','${esc(name)}',null)">
-          + Ajouter un schedule
+          + Ajouter une plage horaire
         </button>
       </div>
     `;
@@ -504,7 +504,7 @@
     document.getElementById('f-org').value     = orgId;
     document.getElementById('f-app').value     = appId;
     document.getElementById('f-appname').value = appName;
-    document.getElementById('modal-title').textContent = schedId ? 'Modifier le schedule' : 'Ajouter un schedule';
+    document.getElementById('modal-title').textContent = schedId ? 'Modifier la plage horaire' : 'Nouvelle plage horaire';
 
     if (schedId) {
       const s = schedules.find(s => s.id === schedId);
@@ -551,7 +551,7 @@
       if (isEdit) { await req('PUT',  '/schedules/' + schedId, base); }
       else        { await req('POST', '/schedules', base); }
       closeModal();
-      toast('Schedule enregistré ✓');
+      toast('Plage horaire enregistrée ✓');
       loadOrg(currentOrg.id, currentOrg.name);
     } catch(e) { toast(e.message, true); }
   });
@@ -575,10 +575,10 @@
   }
 
   async function delSched(id) {
-    if (!confirm('Supprimer ce schedule ?')) return;
+    if (!confirm('Supprimer cette plage horaire ?')) return;
     try {
       await req('DELETE', '/schedules/' + id);
-      toast('Supprimé');
+      toast('Plage horaire supprimée');
       loadOrg(currentOrg.id, currentOrg.name);
     } catch(e) { toast(e.message, true); }
   }

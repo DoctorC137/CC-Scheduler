@@ -227,7 +227,7 @@
     #modal h3 { font-size: 16px; font-weight: 700; margin-bottom: 22px; color: #0B0F1E; }
 
     .fg { margin-bottom: 14px; }
-    .fg label {
+    .fg label:not(.sw) {
       display: block; font-size: 10px; font-weight: 600;
       color: #94A3B8; margin-bottom: 6px;
       text-transform: uppercase; letter-spacing: 0.8px;
@@ -244,7 +244,7 @@
       box-shadow: 0 0 0 3px rgba(203,28,66,.08);
       background: #FFFFFF;
     }
-    .fg input:disabled { opacity: .4; cursor: default; background: #F1F5F9; }
+    .fg input:disabled { opacity: 1; cursor: default; background: #F1F5F9; color: #334155; font-weight: 500; }
     .fg-hint { font-size: 10px; color: #B0BDD0; margin-top: 5px; }
     .fg-row { display: flex; gap: 12px; }
     .fg-row .fg { flex: 1; }

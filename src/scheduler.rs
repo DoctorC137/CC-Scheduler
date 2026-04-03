@@ -1,5 +1,7 @@
 use anyhow::Result;
+use std::collections::HashMap;
 use std::sync::Arc;
+use tokio::sync::Mutex;
 use tokio_cron_scheduler::{Job, JobScheduler};
 use tracing::{error, info, warn};
 use uuid::Uuid;
@@ -14,13 +16,21 @@ pub struct SchedulerService {
     pub sched: JobScheduler,
     pub db: Database,
     pub cc: Arc<CleverClient>,
+    /// Maps schedule_id → list of cron job UUIDs registered for it.
+    /// Used to remove stale jobs before re-registering on update.
+    job_map: Arc<Mutex<HashMap<Uuid, Vec<uuid::Uuid>>>>,
 }
 
 impl SchedulerService {
     pub async fn new(db: Database, cc: Arc<CleverClient>) -> Result<Self> {
         let sched = JobScheduler::new().await?;
         sched.start().await?;
-        Ok(Self { sched, db, cc })
+        Ok(Self {
+            sched,
+            db,
+            cc,
+            job_map: Arc::new(Mutex::new(HashMap::new())),
+        })
     }
 
     pub async fn load_and_schedule_all(&self) -> Result<()> {
@@ -51,7 +61,12 @@ impl SchedulerService {
         let act = action.to_string();
         let sid = s.id;
 
-        let job = Job::new_async(cron, move |_uuid, _lock| {
+        let tz: chrono_tz::Tz = s.timezone.parse().unwrap_or_else(|_| {
+            warn!(schedule_id = %sid, timezone = %s.timezone, "Invalid timezone, falling back to Europe/Paris");
+            chrono_tz::Europe::Paris
+        });
+
+        let job = Job::new_async_tz(cron, tz, move |_uuid, _lock| {
             let cc = cc.clone();
             let db = db.clone();
             let app = app.clone();
@@ -82,12 +97,34 @@ impl SchedulerService {
             })
         })?;
 
-        self.sched.add(job).await?;
+        let job_uuid = self.sched.add(job).await?;
+        self.job_map.lock().await.entry(sid).or_default().push(job_uuid);
         info!(schedule_id = %sid, cron = %cron, action = %action, "Job registered");
         Ok(())
     }
 
-    pub async fn reload_schedule(&self, _schedule_id: Uuid) -> Result<()> {
-        self.load_and_schedule_all().await
+    /// Removes the old cron jobs for this schedule, then re-registers if still enabled.
+    /// Fixes the duplication bug where the previous implementation would accumulate
+    /// duplicate jobs on every edit.
+    pub async fn reload_schedule(&self, schedule_id: Uuid) -> Result<()> {
+        let old_jobs = self.job_map.lock().await.remove(&schedule_id).unwrap_or_default();
+        for job_id in old_jobs {
+            if let Err(e) = self.sched.remove(&job_id).await {
+                warn!(schedule_id = %schedule_id, "Failed to remove old job {}: {}", job_id, e);
+            }
+        }
+
+        match self.db.get_schedule(schedule_id).await {
+            Ok(schedule) if schedule.enabled => {
+                self.register(&schedule).await?;
+            }
+            Ok(_) => {
+                info!(schedule_id = %schedule_id, "Schedule disabled, not re-registering");
+            }
+            Err(e) => {
+                warn!(schedule_id = %schedule_id, "Schedule not found after reload: {}", e);
+            }
+        }
+        Ok(())
     }
 }

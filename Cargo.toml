@@ -50,3 +50,6 @@ sha1 = "0.10"
 base64 = "0.22"
 rand = "0.8"
 percent-encoding = "2"
+
+[dev-dependencies]
+wiremock = "0.6"

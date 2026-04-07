@@ -219,7 +219,7 @@ mod tests {
             .await;
 
         Mock::given(method("PUT"))
-            .and(path("/applications/app-1/scalability"))
+            .and(path("/applications/app-1"))
             .respond_with(ResponseTemplate::new(200))
             .expect(1)
             .mount(&server)
@@ -252,7 +252,7 @@ mod tests {
             .mount(&server)
             .await;
         Mock::given(method("PUT"))
-            .and(path("/applications/app-1/scalability"))
+            .and(path("/applications/app-1"))
             .respond_with(ResponseTemplate::new(200))
             .mount(&server)
             .await;
@@ -280,7 +280,7 @@ mod tests {
             .mount(&server)
             .await;
         Mock::given(method("PUT"))
-            .and(path("/applications/app-1/scalability"))
+            .and(path("/applications/app-1"))
             .respond_with(ResponseTemplate::new(200))
             .mount(&server)
             .await;
@@ -312,7 +312,7 @@ mod tests {
             .await;
 
         Mock::given(method("PUT"))
-            .and(path("/applications/app-1/scalability"))
+            .and(path("/applications/app-1"))
             .respond_with(ResponseTemplate::new(200))
             .expect(1)
             .mount(&server)
@@ -345,7 +345,7 @@ mod tests {
             .mount(&server)
             .await;
         Mock::given(method("PUT"))
-            .and(path("/applications/app-1/scalability"))
+            .and(path("/applications/app-1"))
             .respond_with(ResponseTemplate::new(200))
             .mount(&server)
             .await;
@@ -373,7 +373,7 @@ mod tests {
             .mount(&server)
             .await;
         Mock::given(method("PUT"))
-            .and(path("/applications/app-1/scalability"))
+            .and(path("/applications/app-1"))
             .respond_with(ResponseTemplate::new(200))
             .mount(&server)
             .await;

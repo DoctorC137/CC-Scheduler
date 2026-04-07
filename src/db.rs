@@ -139,6 +139,10 @@ impl Database {
         Ok(())
     }
 
+    pub fn pool(&self) -> &PgPool {
+        &self.pool
+    }
+
     pub async fn record_execution(
         &self,
         schedule_id: Uuid,

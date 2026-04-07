@@ -143,34 +143,4 @@ impl Database {
         &self.pool
     }
 
-    pub async fn record_execution(
-        &self,
-        schedule_id: Uuid,
-        action: &str,
-        error: Option<&str>,
-    ) -> Result<()> {
-        sqlx::query(
-            "INSERT INTO execution_logs (schedule_id, action, error) VALUES ($1, $2, $3)"
-        )
-        .bind(schedule_id)
-        .bind(action)
-        .bind(error)
-        .execute(&self.pool)
-        .await?;
-
-        sqlx::query(r#"
-            UPDATE schedules SET
-                last_run_at = now(),
-                last_action = $2,
-                last_error  = $3
-            WHERE id = $1
-        "#)
-        .bind(schedule_id)
-        .bind(action)
-        .bind(error)
-        .execute(&self.pool)
-        .await?;
-
-        Ok(())
-    }
 }

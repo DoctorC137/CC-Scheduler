@@ -14,8 +14,8 @@ use crate::api::AppState;
 
 type HmacSha1 = Hmac<Sha1>;
 
-/// Calcule la valeur attendue du cookie de session à partir du mot de passe.
-/// Utilise HMAC-SHA1 pour que le mot de passe ne soit jamais stocké ou exposé.
+// The session cookie value is HMAC-SHA1(password, domain-string).
+// The password is never stored or sent over the wire; only its MAC is set as a cookie.
 pub fn session_cookie_value(password: &str) -> String {
     let mut mac = HmacSha1::new_from_slice(password.as_bytes()).unwrap();
     mac.update(b"cc-scheduler-session-v1");
@@ -26,7 +26,6 @@ pub fn session_cookie_value(password: &str) -> String {
         .collect()
 }
 
-/// GET /auth/login — page de connexion
 pub async fn login_page() -> impl IntoResponse {
     Html(LOGIN_HTML)
 }
@@ -36,7 +35,6 @@ pub struct LoginForm {
     password: String,
 }
 
-/// POST /auth/login — vérifie le mot de passe et pose le cookie de session
 pub async fn login_submit(
     State(state): State<AppState>,
     Form(form): Form<LoginForm>,
@@ -55,7 +53,6 @@ pub async fn login_submit(
     }
 }
 
-/// GET /auth/logout — supprime le cookie et redirige vers le login
 pub async fn logout() -> impl IntoResponse {
     let clear = "session=; HttpOnly; Path=/; SameSite=Lax; Max-Age=0";
     let mut headers = axum::http::HeaderMap::new();
@@ -64,7 +61,8 @@ pub async fn logout() -> impl IntoResponse {
     (StatusCode::FOUND, headers).into_response()
 }
 
-/// Middleware : protège toutes les routes sauf /auth/* et /health.
+// Axum middleware: passes /auth/* and /health through unauthenticated;
+// all other routes require a valid session cookie.
 pub async fn require_auth(
     State(state): State<AppState>,
     req: Request<Body>,
@@ -113,7 +111,7 @@ fn extract_cookie(req: &Request<Body>, name: &str) -> Option<String> {
 }
 
 const LOGIN_HTML: &str = r##"<!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -194,16 +192,16 @@ const LOGIN_HTML: &str = r##"<!DOCTYPE html>
       </div>
     </div>
     <form method="POST" action="/auth/login">
-      <label>Mot de passe</label>
+      <label>Password</label>
       <input type="password" name="password" autofocus placeholder="••••••••">
-      <button type="submit">Se connecter</button>
+      <button type="submit">Sign in</button>
     </form>
   </div>
   <script>
     if (new URLSearchParams(location.search).get('error')) {
       const err = document.createElement('div');
       err.className = 'err';
-      err.innerHTML = '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Mot de passe incorrect.';
+      err.innerHTML = '<svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg> Incorrect password.';
       document.querySelector('form').prepend(err);
     }
   </script>

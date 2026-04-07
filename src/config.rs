@@ -4,14 +4,8 @@ use anyhow::Result;
 pub struct AppConfig {
     pub port: u16,
     pub database_url: String,
-
-    /// ID de l'organisation CC gérée par cette instance
     pub cc_org_id: String,
-
-    /// Service token Biscuit (Bearer) pour l'API CC
     pub cc_service_token: String,
-
-    /// Mot de passe pour accéder à l'interface web
     pub app_password: String,
 }
 

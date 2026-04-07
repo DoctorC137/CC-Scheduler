@@ -36,12 +36,8 @@ async fn main() -> Result<()> {
 
     let cc = Arc::new(CleverClient::new(&cfg.cc_org_id, &cfg.cc_service_token));
 
-    // Récupère le nom de l'organisation au démarrage
     let org_name = match cc.get_org().await {
-        Ok(org) => org["name"]
-            .as_str()
-            .unwrap_or(&cfg.cc_org_id)
-            .to_string(),
+        Ok(org) => org["name"].as_str().unwrap_or(&cfg.cc_org_id).to_string(),
         Err(e) => {
             tracing::warn!("Could not fetch org name: {} — using org_id as fallback", e);
             cfg.cc_org_id.clone()

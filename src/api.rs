@@ -57,7 +57,7 @@ async fn health() -> impl IntoResponse {
     Json(serde_json::json!({ "status": "ok" }))
 }
 
-/// Retourne l'organisation configurée (toujours une seule avec les service tokens)
+// Returns the single configured organisation (service tokens are org-scoped).
 async fn list_orgs(State(state): State<AppState>) -> impl IntoResponse {
     Json(serde_json::json!([{
         "id": state.org_id,
@@ -122,7 +122,7 @@ async fn trigger_now(
 ) -> Result<impl IntoResponse, AppError> {
     let schedule = state.db.get_schedule(id).await?;
     match action.as_str() {
-        "stop" => state.cc.stop_app(&schedule.app_id).await?,
+        "stop"  => state.cc.stop_app(&schedule.app_id).await?,
         "start" => state.cc.start_app(&schedule.app_id).await?,
         _ => return Err(AppError::BadRequest(format!("Unknown action: {}", action))),
     }

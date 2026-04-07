@@ -54,6 +54,10 @@ impl Database {
         Ok(())
     }
 
+    pub fn pool(&self) -> &PgPool {
+        &self.pool
+    }
+
     pub async fn list_schedules(&self) -> Result<Vec<Schedule>> {
         let rows = sqlx::query_as::<_, Schedule>(
             "SELECT id, org_id, app_id, name, cron_stop, cron_start, timezone, enabled, \
@@ -138,9 +142,4 @@ impl Database {
             .await?;
         Ok(())
     }
-
-    pub fn pool(&self) -> &PgPool {
-        &self.pool
-    }
-
 }

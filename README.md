@@ -1,137 +1,205 @@
-# CC Scheduler
+# cc-scheduler
 
-Interface web de gestion des horaires d'extinction/démarrage automatique d'applications Clever Cloud.
+A self-hosted web app that automatically starts and stops Clever Cloud applications on a cron schedule. Built with Rust and designed to run on Clever Cloud itself.
 
-Chaque instance gère **une organisation CC**. L'authentification repose sur un **service token Biscuit** pour l'API CC, et un mot de passe pour l'interface web.
+One deployment manages one organisation. Multiple instances can run in parallel — a PostgreSQL advisory lock ensures each job fires exactly once.
+
+---
+
+## How it works
+
+Each schedule defines:
+- An application to control
+- An optional **stop** cron expression (sets `minInstances=0`, then kills running instances)
+- An optional **start** cron expression (sets `minInstances=1`, then triggers a new deployment)
+- A timezone (IANA, e.g. `Europe/Paris`)
+
+Clever Cloud automatically restarts any app whose `minInstances ≥ 1`, so stop must write `0` first — otherwise the platform re-schedules a deployment the moment instances are deleted.
+
+---
 
 ## Stack
 
-- **Rust** + **Axum** (API REST + interface web)
-- **tokio-cron-scheduler** (exécution des tâches cron)
-- **PostgreSQL** (persistance des schedules, add-on CC)
-- **Service tokens Biscuit** (auth API Clever Cloud)
+| Layer | Technology |
+|---|---|
+| Web framework | Axum 0.7 |
+| Cron scheduler | tokio-cron-scheduler 0.11 |
+| Database | PostgreSQL (via SQLx 0.7) |
+| HTTP client | Reqwest 0.12 |
+| Auth | HMAC-SHA1 session cookie |
 
-## Fonctionnalités
+---
 
-- Sidebar listant les applications de l'organisation
-- Création de schedules stop/start avec expression cron et fuseau horaire
-- Activation/désactivation à la volée
-- Déclenchement manuel immédiat (start / stop)
-- Interface web protégée par mot de passe
+## Deployment on Clever Cloud
 
-## Déploiement sur Clever Cloud
+### Prerequisites
 
-### 1. Créer l'application et l'add-on PostgreSQL
+- [clever-tools](https://github.com/CleverCloud/clever-tools) installed and authenticated
+- An organisation on Clever Cloud
+
+### 1. Create the app and add-on
 
 ```bash
 clever create --type rust cc-scheduler --region par --org <org_id>
 clever addon create postgresql-addon --plan dev --link cc-scheduler
 ```
 
-### 2. Créer un service token pour votre organisation
+### 2. Create a service token for the organisation
 
 ```bash
-# Avec clever-tools (nécessite d'être connecté)
 curl -X POST https://api.clever-cloud.com/v2/organisations/<org_id>/service-tokens \
-  -H "Authorization: Bearer <votre_token_perso>" \
   -H "Content-Type: application/json" \
-  -d '{"name": "cc-scheduler", "role": "MANAGER", "ttl_seconds": 31536000}'
+  -d '{"name":"cc-scheduler","role":"MANAGER","expirationDate":"2027-12-31T00:00:00Z"}'
 ```
 
-Ou via un script Python en utilisant vos credentials OAuth1 clever-tools.
+> The token must have the `MANAGER` role to start/stop applications and read scalability settings.
 
-### 3. Configurer les variables d'environnement
+### 3. Set environment variables
 
 ```bash
-clever env set CC_ORG_ID      "orga_xxxxxxxxxxxxxxxxxxxxxxxxxx"
+clever env set CC_ORG_ID        "orga_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
 clever env set CC_SERVICE_TOKEN "<biscuit_token>"
-clever env set APP_PASSWORD   "<mot_de_passe_interface_web>"
+clever env set APP_PASSWORD     "<web_ui_password>"
 ```
 
-| Variable               | Description                                   | Injectée par CC |
-|------------------------|-----------------------------------------------|-----------------|
-| `PORT`                 | Port HTTP (8080 par défaut)                   | ✓               |
-| `POSTGRESQL_ADDON_URI` | URL de connexion PostgreSQL                   | ✓ (add-on)      |
-| `CC_ORG_ID`            | ID de l'organisation CC à gérer               | À configurer    |
-| `CC_SERVICE_TOKEN`     | Service token Biscuit (rôle MANAGER minimum)  | À configurer    |
-| `APP_PASSWORD`         | Mot de passe de l'interface web               | À configurer    |
-| `RUST_LOG`             | Niveau de log (ex: `info`)                    | À configurer    |
+| Variable               | Description                                          | Source         |
+|------------------------|------------------------------------------------------|----------------|
+| `PORT`                 | HTTP port (default: `8080`)                          | Injected by CC |
+| `POSTGRESQL_ADDON_URI` | PostgreSQL connection string                         | Injected by CC |
+| `CC_ORG_ID`            | ID of the organisation to manage                     | Set manually   |
+| `CC_SERVICE_TOKEN`     | Biscuit service token (MANAGER role)                 | Set manually   |
+| `APP_PASSWORD`         | Password for the web interface                       | Set manually   |
+| `RUST_LOG`             | Log level (e.g. `info`, `debug`)                     | Optional       |
 
-### 4. Déployer
+### 4. Deploy
 
 ```bash
-git push origin main
 clever deploy
 ```
 
-## Développement local
+---
+
+## Local development
 
 ```bash
-# Base de données locale
+# Start a local PostgreSQL instance
 docker run -d -p 5432:5432 -e POSTGRES_PASSWORD=dev postgres:16
 
-# Lancer l'app
+# Run the app
 DATABASE_URL=postgres://postgres:dev@localhost/cc_scheduler \
 CC_ORG_ID=orga_xxx \
 CC_SERVICE_TOKEN=<biscuit> \
-APP_PASSWORD=monmotdepasse \
+APP_PASSWORD=secret \
 cargo run
 ```
 
-L'interface est accessible sur http://localhost:8080 — le login demande `APP_PASSWORD`.
+The UI is available at [http://localhost:8080](http://localhost:8080).
 
-## API REST
+---
 
-Toutes les routes sont protégées par le cookie de session (login requis).
+## REST API
+
+All routes require a valid session cookie (obtained via `POST /auth/login`).
 
 ### Schedules
 
-```http
-GET    /schedules                        # Lister
-POST   /schedules                        # Créer
-GET    /schedules/:id                    # Détail
-PUT    /schedules/:id                    # Modifier
-DELETE /schedules/:id                    # Supprimer
-POST   /schedules/:id/trigger/start      # Démarrer maintenant
-POST   /schedules/:id/trigger/stop       # Éteindre maintenant
+```
+GET    /schedules                     List all schedules
+POST   /schedules                     Create a schedule
+GET    /schedules/:id                 Get a schedule
+PUT    /schedules/:id                 Update a schedule
+DELETE /schedules/:id                 Delete a schedule
+POST   /schedules/:id/trigger/start   Start the app immediately
+POST   /schedules/:id/trigger/stop    Stop the app immediately
 ```
 
-**Créer un schedule :**
+**Create a schedule:**
 
 ```json
 POST /schedules
 {
-  "org_id": "orga_xxx",
-  "app_id": "app_xxx",
-  "name": "Staging nuit",
-  "cron_stop":  "0 20 * * 1-5",
-  "cron_start": "0 8 * * 1-5",
-  "timezone": "Europe/Paris",
-  "enabled": true
+  "org_id":    "orga_xxx",
+  "app_id":    "app_xxx",
+  "name":      "Staging — weekdays only",
+  "cron_stop":  "0 20 0 * * 1-5",
+  "cron_start": "0 8 0 * * 1-5",
+  "timezone":  "Europe/Paris",
+  "enabled":   true
 }
 ```
 
-### Clever Cloud proxy
+All fields except `org_id` and `app_id` are optional. `cron_stop` and `cron_start` are independent — a schedule can have one without the other.
 
-```http
-GET /orgs                   # Organisation configurée
-GET /orgs/:id/apps          # Applications de l'organisation
+### Organisation
+
+```
+GET /orgs              Returns the configured organisation
+GET /orgs/:id/apps     Lists all applications in the organisation
 ```
 
-## Exemples de cron
+---
 
-| Expression       | Signification                      |
-|------------------|------------------------------------|
-| `0 20 * * 1-5`  | 20h, lundi–vendredi                |
-| `0 8 * * 1-5`   | 8h, lundi–vendredi                 |
-| `0 22 * * *`    | 22h tous les jours                 |
-| `0 0 * * 6,0`   | Minuit le week-end                 |
-| `30 7 1 * *`    | 7h30 le 1er de chaque mois         |
+## Cron format
 
-Timezone IANA supportée (ex: `Europe/Paris`, `UTC`, `America/New_York`).
+Expressions use the **6-field** format required by `tokio-cron-scheduler`:
 
-## Sécurité
+```
+sec  min  hour  day-of-month  month  day-of-week
+ 0    20    8        *           *      1-5
+```
 
-- **Interface web** : protégée par mot de passe (`APP_PASSWORD`), session cookie HttpOnly HMAC-SHA1 (7 jours)
-- **API CC** : service token Biscuit org-scoped, révocable depuis la console CC
-- **Isolation** : un déploiement = une organisation = un token dédié
+| Expression          | Meaning                         |
+|---------------------|---------------------------------|
+| `0 0 20 * * 1-5`   | 8:00 PM, Monday–Friday          |
+| `0 0 8 * * 1-5`    | 8:00 AM, Monday–Friday          |
+| `0 0 22 * * *`     | 10:00 PM every day              |
+| `0 30 7 1 * *`     | 7:30 AM on the 1st of the month |
+| `0 0 0 * * 6,0`    | Midnight on weekends            |
+
+Timezones are IANA strings (e.g. `Europe/Paris`, `UTC`, `America/New_York`). The scheduler applies the timezone — cron times are local, not UTC.
+
+---
+
+## Testing
+
+```bash
+# Unit tests (mock HTTP server, no credentials needed)
+cargo test
+
+# Integration tests against the real Clever Cloud API
+cargo test -- --ignored --test-threads=1
+```
+
+Integration tests require `CC_ORG_ID` and `CC_SERVICE_TOKEN` in the environment or a `.env` file.
+
+---
+
+## Architecture
+
+```
+main.rs          Boot: connect DB, init scheduler, start Axum server
+├── config.rs    Load environment variables
+├── db.rs        PostgreSQL layer (SQLx, inline migrations)
+├── clever.rs    Clever Cloud API client (Bearer auth)
+├── scheduler.rs Cron job registry with distributed locking
+├── api.rs       Axum routes + AppState
+├── auth.rs      Session cookie middleware (HMAC-SHA1)
+└── error.rs     Unified error type → HTTP responses
+```
+
+### Distributed locking
+
+When multiple instances run simultaneously (horizontal scaling), each instance registers its own cron jobs in-memory. To prevent duplicate executions, every job acquires a **PostgreSQL transaction-level advisory lock** (`pg_try_advisory_xact_lock`) before calling the Clever Cloud API:
+
+- **Acquired** → execute, write to `execution_logs`, commit (releases lock atomically)
+- **Not acquired** → another instance is already handling this job; skip
+
+Transaction-level locks are automatically released on commit or rollback and are safe to use with connection pools — unlike session-level locks, they never leak back into the pool.
+
+---
+
+## Security
+
+- **Web UI** — password-protected; session is an HMAC-SHA1 cookie (HttpOnly, SameSite=Lax, 7-day TTL)
+- **Clever Cloud API** — Biscuit service token scoped to one organisation; revocable from the CC console at any time
+- **Isolation** — one deployment = one organisation = one dedicated token

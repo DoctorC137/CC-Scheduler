@@ -19,6 +19,16 @@ ask() {
     echo -ne "${BOLD}      → ${NC}"
 }
 
+# read_secret: reads without echo when stdin is a tty, plain read otherwise
+# (plain read is needed for piped/non-interactive usage)
+read_secret() {
+    if [ -t 0 ]; then
+        read -s -r "$1"
+    else
+        read -r "$1"
+    fi
+}
+
 menu() {
     local title="$1"; shift
     local default_idx="$1"; shift
@@ -131,12 +141,12 @@ info "PostgreSQL plan: $PG_PLAN"
 section "Scheduler configuration"
 
 ask "Web UI password (required):"
-read -s -r APP_PASSWORD
+read_secret APP_PASSWORD
 echo ""
 [ -z "$APP_PASSWORD" ] && error "Password is required."
 
 ask "Confirm password:"
-read -s -r APP_PASS_CONFIRM
+read_secret APP_PASS_CONFIRM
 echo ""
 [ "$APP_PASSWORD" != "$APP_PASS_CONFIRM" ] && error "Passwords do not match."
 
@@ -180,16 +190,34 @@ section "Creating Clever Cloud service token"
 
 if [ -n "$ORG_INPUT" ]; then
     EXPIRY="$(date -v+1y '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null || date -d '+1 year' '+%Y-%m-%dT%H:%M:%SZ' 2>/dev/null)"
-    TOKEN_RESPONSE=$(clever curl -s -X POST \
+    info "Calling CC API to create service token..."
+    TOKEN_RESPONSE=$(clever curl -X POST \
         -H "Content-Type: application/json" \
         -d "{\"name\":\"${APP_NAME}\",\"role\":\"MANAGER\",\"expirationDate\":\"${EXPIRY}\"}" \
         "https://api.clever-cloud.com/v2/organisations/${ORG_INPUT}/service-tokens" 2>/dev/null)
 
-    CC_SERVICE_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c "import sys,json; d=json.load(sys.stdin); print(d['token'])" 2>/dev/null)
+    # Extract token — try jq first, then python3, then grep as last resort
+    CC_SERVICE_TOKEN=""
+    if command -v jq >/dev/null 2>&1; then
+        CC_SERVICE_TOKEN=$(echo "$TOKEN_RESPONSE" | jq -r '.token // empty' 2>/dev/null || true)
+    fi
+    if [ -z "$CC_SERVICE_TOKEN" ]; then
+        CC_SERVICE_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c \
+            "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))" 2>/dev/null || true)
+    fi
+    if [ -z "$CC_SERVICE_TOKEN" ]; then
+        CC_SERVICE_TOKEN=$(echo "$TOKEN_RESPONSE" | grep -o '"token":"[^"]*"' | cut -d'"' -f4 || true)
+    fi
 
     if [ -z "$CC_SERVICE_TOKEN" ]; then
-        warn "Could not create service token automatically."
-        warn "Create one manually in the Clever Cloud console and paste it below."
+        warn "Could not extract token automatically. Raw API response:"
+        echo "$TOKEN_RESPONSE" | head -5
+        echo ""
+        warn "Create a token manually (MANAGER role) and paste it below."
+        warn "  clever curl -X POST -H 'Content-Type: application/json' \\"
+        warn "    -d '{\"name\":\"cc-scheduler\",\"role\":\"MANAGER\",\"expirationDate\":\"2027-12-31T00:00:00Z\"}' \\"
+        warn "    https://api.clever-cloud.com/v2/organisations/${ORG_INPUT}/service-tokens"
+        echo ""
         ask "CC_SERVICE_TOKEN:"
         read -r CC_SERVICE_TOKEN
         [ -z "$CC_SERVICE_TOKEN" ] && error "Service token is required."

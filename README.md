@@ -59,6 +59,41 @@ Transaction-level locks are automatically released on commit or rollback, and ar
 
 ---
 
+## Service token
+
+The scheduler authenticates with the Clever Cloud API using a **Biscuit service token** — not your personal credentials. This is intentional:
+
+- **Scoped** — bound to a single organisation and role (`MANAGER`); no access outside of it
+- **Revocable** — can be deleted from the CC console at any time, independently of any user account
+- **Non-interactive** — works in a deployed service without a user session
+
+The `MANAGER` role is required to read application configs, update `minInstances`, and trigger deployments. A lower role (e.g. `DEVELOPER`) will return 403 errors on scalability updates.
+
+### Getting a token
+
+**Option 1 — CLI** (requires being logged in with `clever login`):
+
+```bash
+clever curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"name":"cc-scheduler","role":"MANAGER","expirationDate":"2027-12-31T00:00:00Z"}' \
+  "https://api.clever-cloud.com/v2/organisations/<org_id>/service-tokens"
+```
+
+Copy the `token` field from the JSON response.
+
+**Option 2 — CC console**: go to your organisation → **Service tokens** → create a new token with the `MANAGER` role.
+
+Once you have it, set it on the app:
+
+```bash
+clever env set --alias cc-scheduler CC_SERVICE_TOKEN "<token>"
+```
+
+> Service tokens are only available for **organisations**. Personal Clever Cloud accounts do not support them.
+
+---
+
 ## Deployment
 
 ### Prerequisites
@@ -74,7 +109,15 @@ clever login
 bash deploy/clever-deploy.sh
 ```
 
-The script provisions the Rust app, the PostgreSQL add-on, creates a scoped service token, sets all environment variables, and deploys — all in one go.
+The script provisions everything interactively:
+
+1. Creates the Rust application on Clever Cloud
+2. Provisions a PostgreSQL add-on and links it to the app
+3. Creates a scoped Biscuit service token (MANAGER role, 1-year expiry) via the CC API
+4. Sets all required environment variables
+5. Deploys the source code
+
+If automatic token creation fails (network issue, permission error), the script will ask you to paste one manually — see [Getting a token](#getting-a-token) above.
 
 ### Teardown
 
@@ -98,14 +141,7 @@ clever addon create postgresql-addon --plan dev --link cc-scheduler cc-scheduler
 
 #### 2. Create a service token
 
-```bash
-clever curl -X POST \
-  -H "Content-Type: application/json" \
-  -d '{"name":"cc-scheduler","role":"MANAGER","expirationDate":"2027-12-31T00:00:00Z"}' \
-  "https://api.clever-cloud.com/v2/organisations/<org_id>/service-tokens"
-```
-
-> The token requires the `MANAGER` role to read scalability settings and start/stop applications.
+See [Getting a token](#getting-a-token) above.
 
 #### 3. Set environment variables
 

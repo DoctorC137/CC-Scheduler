@@ -68,24 +68,46 @@ npm install -g clever-tools
 clever login
 ```
 
-### 1. Create the app and add-on
+### Automated (recommended)
 
 ```bash
-clever create --type rust cc-scheduler --region par --org <org_id>
-clever addon create postgresql-addon --plan dev --link cc-scheduler
+bash deploy/clever-deploy.sh
 ```
 
-### 2. Create a service token for the organisation
+The script provisions the Rust app, the PostgreSQL add-on, creates a scoped service token, sets all environment variables, and deploys — all in one go.
+
+### Teardown
 
 ```bash
-curl -X POST https://api.clever-cloud.com/v2/organisations/<org_id>/service-tokens \
+bash tools/clever-destroy.sh cc-scheduler [orga_xxx]
+```
+
+Deletes the application, the PostgreSQL add-on, `.clever.json`, and the git remote. Requires typing `delete` to confirm.
+
+### Manual setup
+
+<details>
+<summary>Step-by-step without the script</summary>
+
+#### 1. Create the app and add-on
+
+```bash
+clever create --type rust --region par --org <org_id> cc-scheduler
+clever addon create postgresql-addon --plan dev --link cc-scheduler cc-scheduler-pg
+```
+
+#### 2. Create a service token
+
+```bash
+clever curl -X POST \
   -H "Content-Type: application/json" \
-  -d '{"name":"cc-scheduler","role":"MANAGER","expirationDate":"2027-12-31T00:00:00Z"}'
+  -d '{"name":"cc-scheduler","role":"MANAGER","expirationDate":"2027-12-31T00:00:00Z"}' \
+  "https://api.clever-cloud.com/v2/organisations/<org_id>/service-tokens"
 ```
 
 > The token requires the `MANAGER` role to read scalability settings and start/stop applications.
 
-### 3. Set environment variables
+#### 3. Set environment variables
 
 ```bash
 clever env set CC_ORG_ID        "orga_xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
@@ -102,11 +124,13 @@ clever env set APP_PASSWORD     "<web_ui_password>"
 | `APP_PASSWORD`         | Password for the web interface           | Set manually   |
 | `RUST_LOG`             | Log level (e.g. `info`, `debug`)         | Optional       |
 
-### 4. Deploy
+#### 4. Deploy
 
 ```bash
 clever deploy
 ```
+
+</details>
 
 ---
 

@@ -203,7 +203,12 @@ if [ -n "$ORG_INPUT" ]; then
     fi
     if [ -z "$CC_SERVICE_TOKEN" ]; then
         CC_SERVICE_TOKEN=$(echo "$TOKEN_RESPONSE" | python3 -c \
-            "import sys,json; d=json.load(sys.stdin); print(d.get('token',''))" 2>/dev/null || true)
+            "import sys,json
+for line in sys.stdin:
+    line=line.strip()
+    if line.startswith('{'):
+        try: print(json.loads(line).get('token','')); break
+        except: pass" 2>/dev/null || true)
     fi
     if [ -z "$CC_SERVICE_TOKEN" ]; then
         CC_SERVICE_TOKEN=$(echo "$TOKEN_RESPONSE" | grep -o '"token":"[^"]*"' | cut -d'"' -f4 || true)

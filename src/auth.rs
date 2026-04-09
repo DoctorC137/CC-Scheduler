@@ -1,11 +1,12 @@
 use axum::{
     body::Body,
-    extract::State,
+    extract::{ConnectInfo, State},
     http::{header, Request, StatusCode},
     middleware::Next,
     response::{Html, IntoResponse, Json, Redirect, Response},
     Form,
 };
+use std::net::SocketAddr;
 use hmac::{Hmac, Mac};
 use serde::Deserialize;
 use sha1::Sha1;
@@ -59,6 +60,37 @@ pub async fn logout() -> impl IntoResponse {
     headers.insert(header::SET_COOKIE, clear.parse().unwrap());
     headers.insert(header::LOCATION, "/auth/login".parse().unwrap());
     (StatusCode::FOUND, headers).into_response()
+}
+
+// Axum middleware: if CC_REVERSE_PROXY_IPS is set, reject any TCP connection
+// whose source IP is not in the trusted list. Empty list = no restriction
+// (local dev / non-CC environments).
+pub async fn require_trusted_proxy(
+    State(state): State<AppState>,
+    req: Request<Body>,
+    next: Next,
+) -> Response {
+    if state.trusted_proxy_ips.is_empty() {
+        return next.run(req).await;
+    }
+
+    let ip = req
+        .extensions()
+        .get::<ConnectInfo<SocketAddr>>()
+        .map(|ci| ci.0.ip());
+
+    match ip {
+        Some(ip) if state.trusted_proxy_ips.contains(&ip) => next.run(req).await,
+        Some(ip) => {
+            tracing::warn!("Blocked request from untrusted IP: {}", ip);
+            (StatusCode::FORBIDDEN, Json(serde_json::json!({ "error": "Forbidden" })))
+                .into_response()
+        }
+        None => {
+            tracing::warn!("ConnectInfo not available — allowing request (check serve setup)");
+            next.run(req).await
+        }
+    }
 }
 
 // Axum middleware: passes /auth/* and /health through unauthenticated;

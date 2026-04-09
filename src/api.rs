@@ -27,6 +27,7 @@ pub struct AppState {
     pub org_name: String,
     pub session_value: String,
     pub app_password: String,
+    pub trusted_proxy_ips: Vec<std::net::IpAddr>,
 }
 
 pub fn build_router(state: AppState) -> Router {
@@ -44,6 +45,7 @@ pub fn build_router(state: AppState) -> Router {
         .route("/schedules/:id", delete(delete_schedule))
         .route("/schedules/:id/trigger/:action", post(trigger_now))
         .layer(axum::middleware::from_fn_with_state(state.clone(), require_auth))
+        .layer(axum::middleware::from_fn_with_state(state.clone(), crate::auth::require_trusted_proxy))
         .layer(CorsLayer::permissive())
         .layer(TraceLayer::new_for_http())
         .with_state(state)

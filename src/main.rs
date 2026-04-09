@@ -7,7 +7,7 @@ mod models;
 mod scheduler;
 mod clever;
 
-use std::sync::Arc;
+use std::{net::SocketAddr, sync::Arc};
 use anyhow::Result;
 use tracing::info;
 use tracing_subscriber::{EnvFilter, fmt};
@@ -50,6 +50,12 @@ async fn main() -> Result<()> {
 
     let session_value = session_cookie_value(&cfg.app_password);
 
+    if cfg.trusted_proxy_ips.is_empty() {
+        info!("CC_REVERSE_PROXY_IPS not set — no IP restriction (local/dev mode)");
+    } else {
+        info!("Trusted proxy IPs: {:?}", cfg.trusted_proxy_ips);
+    }
+
     let state = AppState {
         scheduler,
         db,
@@ -58,6 +64,7 @@ async fn main() -> Result<()> {
         org_name,
         session_value,
         app_password: cfg.app_password.clone(),
+        trusted_proxy_ips: cfg.trusted_proxy_ips.clone(),
     };
 
     let app = api::build_router(state);
@@ -65,7 +72,7 @@ async fn main() -> Result<()> {
     info!("Listening on {}", addr);
 
     let listener = tokio::net::TcpListener::bind(&addr).await?;
-    axum::serve(listener, app).await?;
+    axum::serve(listener, app.into_make_service_with_connect_info::<SocketAddr>()).await?;
 
     Ok(())
 }
